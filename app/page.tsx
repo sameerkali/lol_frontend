@@ -1,69 +1,121 @@
-import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--surface-page)",
+        padding: 24,
+        gap: 40,
+      }}
+    >
+      <div style={{ textAlign: "center" }}>
+        <h1
+          style={{
+            font: "var(--type-hero)",
+            letterSpacing: "var(--tracking-display)",
+            color: "var(--text-strong)",
+            margin: 0,
+          }}
+        >
+          lol<span style={{ color: "var(--coral-500)" }}>.</span>
+        </h1>
+        <p
+          style={{
+            font: "var(--type-body-lg)",
+            color: "var(--text-muted)",
+            marginTop: 12,
+            maxWidth: 480,
+          }}
+        >
+          A digital stamp card for restaurants and cafes. Tap, stamp, reward.
+        </p>
+      </div>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
+        <Link href="/customer">
+          <button
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 12,
+              padding: "32px 40px",
+              background: "var(--grape-500)",
+              color: "var(--paper-000)",
+              border: "var(--border)",
+              borderRadius: "var(--radius-xl)",
+              boxShadow: "var(--pop-3)",
+              cursor: "pointer",
+              font: "var(--type-subtitle)",
+              letterSpacing: "var(--tracking-display)",
+              minWidth: 200,
+              transition: "all var(--dur-fast) var(--ease-out)",
+            }}
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <span style={{ font: "var(--type-display)", fontSize: 48 }}>📱</span>
+            Customer page
+            <span style={{ font: "var(--type-body-sm)", opacity: 0.85 }}>Mobile web, no app</span>
+          </button>
+        </Link>
+
+        <Link href="/business">
+          <button
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 12,
+              padding: "32px 40px",
+              background: "var(--paper-000)",
+              color: "var(--text-strong)",
+              border: "var(--border)",
+              borderRadius: "var(--radius-xl)",
+              boxShadow: "var(--pop-3)",
+              cursor: "pointer",
+              font: "var(--type-subtitle)",
+              letterSpacing: "var(--tracking-display)",
+              minWidth: 200,
+              transition: "all var(--dur-fast) var(--ease-out)",
+            }}
           >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <span style={{ font: "var(--type-display)", fontSize: 48 }}>📊</span>
+            Business panel
+            <span style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>Dashboard & settings</span>
+          </button>
+        </Link>
+
+        <Link href="/admin">
+          <button
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 12,
+              padding: "32px 40px",
+              background: "var(--ink-900)",
+              color: "var(--paper-000)",
+              border: "var(--border)",
+              borderRadius: "var(--radius-xl)",
+              boxShadow: "var(--pop-3)",
+              cursor: "pointer",
+              font: "var(--type-subtitle)",
+              letterSpacing: "var(--tracking-display)",
+              minWidth: 200,
+              transition: "all var(--dur-fast) var(--ease-out)",
+            }}
+          >
+            <span style={{ font: "var(--type-display)", fontSize: 48 }}>⚙️</span>
+            Admin panel
+            <span style={{ font: "var(--type-body-sm)", opacity: 0.7 }}>Manage businesses</span>
+          </button>
+        </Link>
+      </div>
     </div>
   );
 }
