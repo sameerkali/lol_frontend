@@ -25,7 +25,10 @@ export default function AdminLogin() {
       await login("admin", email, password);
       router.replace("/admin");
     } catch (e: any) {
-      setError(e.message || "Login failed");
+      const msg = e.details?.length
+        ? e.details.map((d: any) => `${d.field}: ${d.message}`).join(", ")
+        : e.message || "Login failed";
+      setError(msg);
     } finally {
       setBusy(false);
     }

@@ -29,7 +29,10 @@ export default function BusinessLogin() {
         router.replace("/business");
       }
     } catch (e: any) {
-      setError(e.message || "Login failed");
+      const msg = e.details?.length
+        ? e.details.map((d: any) => `${d.field}: ${d.message}`).join(", ")
+        : e.message || "Login failed";
+      setError(msg);
     } finally {
       setBusy(false);
     }

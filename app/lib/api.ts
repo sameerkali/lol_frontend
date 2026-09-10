@@ -12,18 +12,27 @@ class ApiError extends Error {
 
 async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  const headers: Record<string, string> = { ...(opts.headers as Record<string, string>) };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  if (opts.body && !(opts.body instanceof FormData)) {
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let body = opts.body;
+  if (body && !(body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
-    opts.body = JSON.stringify(opts.body);
+    body = JSON.stringify(body);
   }
 
-  const res = await fetch(`${BASE}${path}`, { ...opts, headers });
+  const res = await fetch(`${BASE}${path}`, {
+    method: opts.method || "GET",
+    headers,
+    body,
+  });
+
   const json = await res.json();
 
   if (!res.ok || json.success === false) {
-    throw new ApiError(json.message || "Request failed", res.status, json.details);
+    const msg = json.message || json.error || `Request failed (${res.status})`;
+    const details = json.details || [];
+    throw new ApiError(msg, res.status, details);
   }
   return json.data ?? json;
 }
