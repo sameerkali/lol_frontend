@@ -19,6 +19,23 @@ interface AuthCtx {
 
 const Ctx = createContext<AuthCtx>(null!);
 
+// Non-sensitive role flag mirrored into a readable cookie (never the JWT itself) so
+// proxy.ts can do an optimistic, pre-render redirect for /admin and /business routes.
+// This is a UX/defense-in-depth improvement only — the API remains the real
+// authorization boundary via the bearer token on every request.
+const SESSION_COOKIE = "lol_session";
+const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+
+function setSessionCookie(role: Role) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${SESSION_COOKIE}=${role}; path=/; max-age=${SESSION_COOKIE_MAX_AGE}; samesite=lax`;
+}
+
+function clearSessionCookie() {
+  if (typeof document === "undefined") return;
+  document.cookie = `${SESSION_COOKIE}=; path=/; max-age=0; samesite=lax`;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,10 +56,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role,
           businessId: u._id || u.id,
         });
+        setSessionCookie(role);
       })
       .catch(() => {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
+        clearSessionCookie();
       })
       .finally(() => setLoading(false));
   }, []);
@@ -60,11 +79,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role,
       businessId: u._id || u.id,
     });
+    setSessionCookie(role);
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
+    clearSessionCookie();
     setUser(null);
   }, []);
 

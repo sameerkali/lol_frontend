@@ -5,7 +5,8 @@ import {
   Stamp, History, Award, TrendingUp, TrendingDown, CheckCircle,
   AlertCircle, Info, Check, X, Trash2, Plus, PlusCircle, Search,
   LayoutDashboard, Flag, Users, Settings, Store, MapPin, Mail,
-  CreditCard, Sparkles, Inbox, Delete, Gift as GiftIcon,
+  CreditCard, Sparkles, Inbox, Delete, Gift as GiftIcon, Eye, EyeOff,
+  Lock, LogOut, Hash, QrCode,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, React.ComponentType<any>> = {
@@ -42,6 +43,12 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
   sparkles: Sparkles,
   inbox: Inbox,
   delete: Delete,
+  eye: Eye,
+  "eye-off": EyeOff,
+  lock: Lock,
+  "log-out": LogOut,
+  hash: Hash,
+  "qr-code": QrCode,
 };
 
 export function Icon({

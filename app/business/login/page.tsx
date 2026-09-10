@@ -5,13 +5,17 @@ import { useRouter } from "next/navigation";
 import { Button } from "../../components/core/Button";
 import { Card } from "../../components/core/Card";
 import { Input } from "../../components/forms/Input";
+import { validateLoginForm, splitFieldErrors, type LoginFieldErrors } from "../../lib/validation";
+
+const FIELDS = ["email", "password"] as const;
 
 export default function BusinessLogin() {
   const { login, user, loading } = useAuth();
   const router = useRouter();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState("");
+  const [fieldErrors, setFieldErrors] = React.useState<LoginFieldErrors>({});
+  const [formError, setFormError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
@@ -19,20 +23,20 @@ export default function BusinessLogin() {
   }, [user, loading, router]);
 
   const submit = async () => {
-    setError("");
+    setFormError("");
+    const errors = validateLoginForm(email, password);
+    setFieldErrors(errors);
+    if (errors.email || errors.password) return;
+
     setBusy(true);
     try {
-      await login("business", email, password);
-      const role = localStorage.getItem("role");
-      const token = localStorage.getItem("token");
-      if (role === "business" && token) {
-        router.replace("/business");
-      }
+      await login("business", email.trim(), password);
+      router.replace("/business");
     } catch (e: any) {
-      const msg = e.details?.length
-        ? e.details.map((d: any) => `${d.field}: ${d.message}`).join(", ")
-        : e.message || "Login failed";
-      setError(msg);
+      const { fields, general } = splitFieldErrors(e.details, FIELDS);
+      setFieldErrors(fields);
+      if (general.length) setFormError(general.join(" "));
+      else if (!fields.email && !fields.password) setFormError(e.message || "Login failed");
     } finally {
       setBusy(false);
     }
@@ -53,9 +57,29 @@ export default function BusinessLogin() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <Input label="Email" icon="mail" type="email" placeholder="you@business.com" value={email} onChange={setEmail} />
-          <Input label="Password" icon="lock" type="password" placeholder="Password" value={password} onChange={setPassword} />
-          {error && <div style={{ font: "600 14px/1.4 var(--font-body)", color: "var(--danger-ink)" }}>{error}</div>}
+          <Input
+            label="Email"
+            icon="mail"
+            type="email"
+            placeholder="you@business.com"
+            value={email}
+            onChange={(v) => { setEmail(v); if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: undefined })); }}
+            error={fieldErrors.email}
+          />
+          <Input
+            label="Password"
+            icon="lock"
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(v) => { setPassword(v); if (fieldErrors.password) setFieldErrors((f) => ({ ...f, password: undefined })); }}
+            error={fieldErrors.password}
+          />
+          {formError && (
+            <div role="alert" style={{ font: "600 14px/1.4 var(--font-body)", color: "var(--danger-ink)" }}>
+              {formError}
+            </div>
+          )}
           <Button size="lg" fullWidth onClick={submit} disabled={busy || !email || !password}>
             {busy ? "Logging in..." : "Log in"}
           </Button>

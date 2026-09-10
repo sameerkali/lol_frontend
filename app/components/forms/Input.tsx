@@ -30,7 +30,13 @@ export function Input({
   style?: React.CSSProperties;
 }) {
   const [focus, setFocus] = React.useState(false);
+  const [reveal, setReveal] = React.useState(false);
   const rid = React.useId();
+  const errorId = `${rid}-error`;
+  const hintId = `${rid}-hint`;
+  const isPassword = type === "password";
+  const inputType = isPassword && reveal ? "text" : type;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, ...style }}>
       {label ? (
@@ -69,13 +75,15 @@ export function Input({
         ) : null}
         <input
           id={rid}
-          type={type}
+          type={inputType}
           value={value}
           placeholder={placeholder}
           disabled={disabled}
           onChange={(e) => onChange && onChange(e.target.value)}
           onFocus={() => setFocus(true)}
           onBlur={() => setFocus(false)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : hint ? hintId : undefined}
           style={{
             flex: 1,
             minWidth: 0,
@@ -90,13 +98,36 @@ export function Input({
             padding: "17px 0",
           }}
         />
+        {isPassword ? (
+          <button
+            type="button"
+            onClick={() => setReveal((v) => !v)}
+            aria-label={reveal ? "Hide password" : "Show password"}
+            aria-pressed={reveal}
+            tabIndex={-1}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flex: "0 0 auto",
+              background: "transparent",
+              border: 0,
+              padding: 4,
+              margin: 0,
+              cursor: "pointer",
+              color: "var(--ink-500)",
+            }}
+          >
+            <Icon name={reveal ? "eye-off" : "eye"} size={20} />
+          </button>
+        ) : null}
       </div>
       {error ? (
-        <span style={{ font: "var(--type-body-sm)", color: "var(--danger-ink)", fontWeight: 600 }}>
+        <span id={errorId} role="alert" style={{ font: "var(--type-body-sm)", color: "var(--danger-ink)", fontWeight: 600 }}>
           {error}
         </span>
       ) : hint ? (
-        <span style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>
+        <span id={hintId} style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>
           {hint}
         </span>
       ) : null}
