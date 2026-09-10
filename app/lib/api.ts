@@ -1,4 +1,11 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+const PROD_API_URL = "https://lol-api.expendifii.com/api";
+const DEV_API_URL = "http://localhost:5001/api";
+
+// NEXT_PUBLIC_API_URL wins if set; otherwise the deployed backend is the
+// default, with localhost only used as a backup while running `next dev`.
+const BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === "development" ? DEV_API_URL : PROD_API_URL);
 
 class ApiError extends Error {
   status: number;
