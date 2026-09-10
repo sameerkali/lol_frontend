@@ -1,0 +1,117 @@
+"use client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "./api";
+
+/* ======================== ADMIN ======================== */
+
+export function useAdminStats() {
+  return useQuery({ queryKey: ["admin", "stats"], queryFn: () => api.get<any>("/admin/stats") });
+}
+
+export function useAdminBusinesses(params?: Record<string, string>) {
+  const q = params ? "?" + new URLSearchParams(params).toString() : "";
+  return useQuery({ queryKey: ["admin", "businesses", params], queryFn: () => api.get<any>(`/admin/businesses${q}`) });
+}
+
+export function useAdminBusiness(id: string) {
+  return useQuery({ queryKey: ["admin", "business", id], queryFn: () => api.get<any>(`/admin/businesses/${id}`), enabled: !!id });
+}
+
+export function useCreateBusiness() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: any) => api.post<any>("/admin/businesses", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "businesses"] }),
+  });
+}
+
+export function useUpdateBusiness() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string } & any) => api.put<any>(`/admin/businesses/${id}`, body),
+    onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["admin", "businesses"] }); qc.invalidateQueries({ queryKey: ["admin", "business", v.id] }); },
+  });
+}
+
+export function useDeleteBusiness() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.del<any>(`/admin/businesses/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "businesses"] }),
+  });
+}
+
+/* ======================== BUSINESS ======================== */
+
+export function useBusinessMe() {
+  return useQuery({ queryKey: ["business", "me"], queryFn: () => api.get<any>("/business/me") });
+}
+
+export function useBusinessDashboard(from?: string, to?: string) {
+  const params = new URLSearchParams();
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+  const q = params.toString() ? `?${params}` : "";
+  return useQuery({ queryKey: ["business", "dashboard", from, to], queryFn: () => api.get<any>(`/business/dashboard${q}`) });
+}
+
+export function useBusinessCustomers(params?: Record<string, string>) {
+  const q = params ? "?" + new URLSearchParams(params).toString() : "";
+  return useQuery({ queryKey: ["business", "customers", params], queryFn: () => api.get<any>(`/business/customers${q}`) });
+}
+
+export function useUpdateBusinessSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: any) => api.put<any>("/business/me", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["business", "me"] }),
+  });
+}
+
+export function useUpdateBusinessPin() {
+  return useMutation({
+    mutationFn: (body: { pin: string; currentPin?: string }) => api.put<any>("/business/me/pin", body),
+  });
+}
+
+export function useBusinessQr() {
+  return useQuery({ queryKey: ["business", "qr"], queryFn: () => api.get<any>("/business/me/qr") });
+}
+
+/* ======================== PUBLIC (customer) ======================== */
+
+export function usePublicBusiness(slug: string) {
+  return useQuery({ queryKey: ["public", "business", slug], queryFn: () => api.get<any>(`/public/businesses/${slug}`), enabled: !!slug });
+}
+
+export function useCustomerLookup(slug: string) {
+  return useMutation({ mutationFn: (phone: string) => api.post<any>(`/public/businesses/${slug}/lookup`, { phone }) });
+}
+
+export function useCustomerSignup(slug: string) {
+  return useMutation({ mutationFn: (body: { phone: string; name?: string; email?: string; birthday?: string }) => api.post<any>(`/public/businesses/${slug}/signup`, body) });
+}
+
+export function useCustomerCard(slug: string, phone: string) {
+  return useQuery({ queryKey: ["public", "card", slug, phone], queryFn: () => api.get<any>(`/public/businesses/${slug}/card/${phone}`), enabled: !!slug && !!phone });
+}
+
+export function useCustomerHistory(slug: string, phone: string) {
+  return useQuery({ queryKey: ["public", "history", slug, phone], queryFn: () => api.get<any>(`/public/businesses/${slug}/history/${phone}`), enabled: !!slug && !!phone });
+}
+
+export function useMarkVisit(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { phone: string; billAmount?: number; pin?: string }) => api.post<any>(`/public/businesses/${slug}/visits`, body),
+    onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["public", "card", slug, v.phone] }); qc.invalidateQueries({ queryKey: ["public", "history", slug, v.phone] }); },
+  });
+}
+
+export function useRedeem(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { phone: string; milestoneUnlockedId: string; pin: string }) => api.post<any>(`/public/businesses/${slug}/redeem`, body),
+    onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["public", "card", slug, v.phone] }); qc.invalidateQueries({ queryKey: ["public", "history", slug, v.phone] }); },
+  });
+}
