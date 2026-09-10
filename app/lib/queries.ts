@@ -8,6 +8,20 @@ export function useAdminStats() {
   return useQuery({ queryKey: ["admin", "stats"], queryFn: () => api.get<any>("/admin/stats") });
 }
 
+export interface BusinessTemplate {
+  key: string;
+  label: string;
+  description: string;
+}
+
+export function useAdminTemplates() {
+  return useQuery({
+    queryKey: ["admin", "templates"],
+    queryFn: () => api.get<BusinessTemplate[]>("/admin/templates"),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useAdminBusinesses(params?: Record<string, string>) {
   const q = params ? "?" + new URLSearchParams(params).toString() : "";
   return useQuery({ queryKey: ["admin", "businesses", params], queryFn: () => api.get<any>(`/admin/businesses${q}`) });

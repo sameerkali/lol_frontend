@@ -1,4 +1,6 @@
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Matches the backend's own rule exactly (business.routes.js: body("pin").matches(/^\d{4,6}$/)).
+const PIN_RE = /^\d{4,6}$/;
 
 export interface LoginFieldErrors {
   email?: string;
@@ -15,6 +17,37 @@ export function validateLoginForm(email: string, password: string): LoginFieldEr
   if (!password) errors.password = "Password is required";
 
   return errors;
+}
+
+export interface CreateBusinessFieldErrors {
+  name?: string;
+  ownerEmail?: string;
+  ownerPassword?: string;
+}
+
+// Mirrors admin.routes.js: body("name").notEmpty(), body("ownerEmail").isEmail(), body("ownerPassword").isLength({ min: 8 }).
+export function validateCreateBusinessForm(
+  name: string,
+  ownerEmail: string,
+  ownerPassword: string
+): CreateBusinessFieldErrors {
+  const errors: CreateBusinessFieldErrors = {};
+  if (!name.trim()) errors.name = "Business name is required";
+
+  const trimmedEmail = ownerEmail.trim();
+  if (!trimmedEmail) errors.ownerEmail = "Owner email is required";
+  else if (!EMAIL_RE.test(trimmedEmail)) errors.ownerEmail = "Enter a valid email address";
+
+  if (!ownerPassword) errors.ownerPassword = "Owner password is required";
+  else if (ownerPassword.length < 8) errors.ownerPassword = "Password must be at least 8 characters";
+
+  return errors;
+}
+
+/** Mirrors business.routes.js: body("pin").matches(/^\d{4,6}$/). */
+export function validatePinFormat(pin: string): string | undefined {
+  if (!PIN_RE.test(pin)) return "PIN must be 4–6 digits";
+  return undefined;
 }
 
 /**

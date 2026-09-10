@@ -11,20 +11,62 @@ import { Input } from "../components/forms/Input";
 import { StatTile } from "../components/loyalty/StatTile";
 import { MilestoneLadder } from "../components/loyalty/MilestoneLadder";
 import { SideNav } from "../components/navigation/SideNav";
+import { validatePinFormat, splitFieldErrors } from "../lib/validation";
+
+const PIN_FIELDS = ["pin"] as const;
 
 function PinInputs({ pinMut }: { pinMut: any }) {
   const [currentPin, setCurrentPin] = React.useState("");
   const [newPin, setNewPin] = React.useState("");
+  const [newPinError, setNewPinError] = React.useState("");
+  const [pinFormError, setPinFormError] = React.useState("");
+
+  // The API returns a per-field "pin" detail on bad format, and a bare
+  // message (no details) when currentPin is missing/wrong — surface both
+  // in the right place even though client-side validation should already
+  // catch the format case before it ever reaches the network.
+  React.useEffect(() => {
+    if (!pinMut.isError) { setPinFormError(""); return; }
+    const { fields, general } = splitFieldErrors(pinMut.error?.details, PIN_FIELDS);
+    setNewPinError(fields.pin || "");
+    setPinFormError(fields.pin ? "" : general.join(" ") || pinMut.error?.message || "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pinMut.isError, pinMut.error]);
+
+  const submit = () => {
+    const err = validatePinFormat(newPin);
+    setNewPinError(err || "");
+    setPinFormError("");
+    if (err) return;
+    pinMut.mutate({ pin: newPin, currentPin: currentPin || undefined });
+  };
+
   return (
     <>
-      <Input label="Current PIN" type="password" mono placeholder="Enter current PIN" value={currentPin} onChange={setCurrentPin} />
-      <Input label="New PIN" type="password" mono placeholder="Enter new PIN" value={newPin} onChange={setNewPin} />
+      <Input
+        label="Current PIN"
+        type="password"
+        mono
+        placeholder="Enter current PIN"
+        value={currentPin}
+        onChange={setCurrentPin}
+        hint="Only required if a PIN is already set on this business."
+      />
+      <Input
+        label="New PIN"
+        type="password"
+        mono
+        placeholder="4-6 digit PIN"
+        value={newPin}
+        onChange={(v) => { setNewPin(v); if (newPinError) setNewPinError(""); }}
+        error={newPinError}
+      />
       <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-        <Button variant="primary" size="sm" onClick={() => { if (newPin) pinMut.mutate({ pin: newPin, currentPin: currentPin || undefined }); }} disabled={pinMut.isPending || !newPin}>
+        <Button variant="primary" size="sm" onClick={submit} disabled={pinMut.isPending || !newPin}>
           {pinMut.isPending ? "Updating..." : "Update PIN"}
         </Button>
       </div>
-      {pinMut.isError && <div style={{ font: "600 14px/1.4 var(--font-body)", color: "var(--danger-ink)" }}>{(pinMut.error as any)?.message}</div>}
+      {pinFormError && <div role="alert" style={{ font: "600 14px/1.4 var(--font-body)", color: "var(--danger-ink)" }}>{pinFormError}</div>}
       {pinMut.isSuccess && <div style={{ font: "600 14px/1.4 var(--font-body)", color: "var(--success-ink)" }}>PIN updated.</div>}
     </>
   );

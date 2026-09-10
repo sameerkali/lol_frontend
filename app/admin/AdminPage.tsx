@@ -2,7 +2,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../lib/auth";
-import { useAdminStats, useAdminBusinesses, useCreateBusiness, useDeleteBusiness } from "../lib/queries";
+import { useAdminStats, useAdminBusinesses, useAdminTemplates, useCreateBusiness, useDeleteBusiness } from "../lib/queries";
 import { Button } from "../components/core/Button";
 import { Card } from "../components/core/Card";
 import { Badge } from "../components/core/Badge";
@@ -10,6 +10,14 @@ import { Icon } from "../components/core/Icon";
 import { Input } from "../components/forms/Input";
 import { Dialog } from "../components/feedback/Dialog";
 import { SideNav } from "../components/navigation/SideNav";
+import { validateCreateBusinessForm, validatePinFormat, splitFieldErrors, type CreateBusinessFieldErrors } from "../lib/validation";
+
+const CREATE_BUSINESS_FIELDS = ["name", "ownerEmail", "ownerPassword"] as const;
+const FALLBACK_TEMPLATES = [
+  { key: "cafe", label: "Café", description: "" },
+  { key: "restaurant", label: "Restaurant", description: "" },
+  { key: "blank", label: "Blank / custom", description: "" },
+];
 
 const NAV = [
   { value: "businesses", label: "Businesses", icon: "store" },
@@ -29,6 +37,8 @@ export default function AdminPage() {
 
   const { data: stats } = useAdminStats();
   const { data: bizData, isLoading: bizLoading } = useAdminBusinesses(search ? { search } : undefined);
+  const { data: templatesData } = useAdminTemplates();
+  const templates = templatesData?.length ? templatesData : FALLBACK_TEMPLATES;
   const createMut = useCreateBusiness();
   const deleteMut = useDeleteBusiness();
 
@@ -37,12 +47,31 @@ export default function AdminPage() {
   const [newPass, setNewPass] = React.useState("");
   const [newPin, setNewPin] = React.useState("");
   const [newTemplate, setNewTemplate] = React.useState("cafe");
+  const [createFieldErrors, setCreateFieldErrors] = React.useState<CreateBusinessFieldErrors & { pin?: string }>({});
+  const [createFormError, setCreateFormError] = React.useState("");
 
   const handleCreate = async () => {
-    await createMut.mutateAsync({ name: newName, template: newTemplate, ownerEmail: newEmail, ownerPassword: newPass, pin: newPin || undefined });
-    setShowCreate(false);
-    setNewName(""); setNewEmail(""); setNewPass(""); setNewPin("");
-    setTab("businesses");
+    setCreateFormError("");
+    const errors: CreateBusinessFieldErrors & { pin?: string } = validateCreateBusinessForm(newName, newEmail, newPass);
+    if (newPin) {
+      const pinError = validatePinFormat(newPin);
+      if (pinError) errors.pin = pinError;
+    }
+    setCreateFieldErrors(errors);
+    if (Object.keys(errors).length) return;
+
+    try {
+      await createMut.mutateAsync({ name: newName, template: newTemplate, ownerEmail: newEmail.trim(), ownerPassword: newPass, pin: newPin || undefined });
+      setShowCreate(false);
+      setNewName(""); setNewEmail(""); setNewPass(""); setNewPin("");
+      setCreateFieldErrors({});
+      setTab("businesses");
+    } catch (e: any) {
+      const { fields, general } = splitFieldErrors(e.details, CREATE_BUSINESS_FIELDS);
+      setCreateFieldErrors(fields);
+      if (general.length) setCreateFormError(general.join(" "));
+      else if (!Object.keys(fields).length) setCreateFormError(e.message || "Failed to create business");
+    }
   };
 
   const handleLogout = () => { logout(); router.replace("/admin/login"); };
@@ -140,25 +169,56 @@ export default function AdminPage() {
       </div>
       <Card pad={24}>
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <Input label="Business name" placeholder="e.g. Kaapi House" icon="store" value={newName} onChange={setNewName} />
+          <Input
+            label="Business name"
+            placeholder="e.g. Kaapi House"
+            icon="store"
+            value={newName}
+            onChange={(v) => { setNewName(v); if (createFieldErrors.name) setCreateFieldErrors((f) => ({ ...f, name: undefined })); }}
+            error={createFieldErrors.name}
+          />
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <label style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)" }}>Template</label>
             <div style={{ display: "flex", gap: 8 }}>
-              {["cafe", "restaurant", "blank"].map((t) => (
-                <button key={t} onClick={() => setNewTemplate(t)} style={{ padding: "10px 20px", borderRadius: "var(--radius-pill)", border: newTemplate === t ? "var(--border)" : "3px solid transparent", background: newTemplate === t ? "var(--grape-100)" : "var(--paper-000)", font: "var(--type-button)", color: newTemplate === t ? "var(--grape-700)" : "var(--text-muted)", cursor: "pointer", textTransform: "capitalize" }}>{t}</button>
+              {templates.map((t) => (
+                <button key={t.key} title={t.description} onClick={() => setNewTemplate(t.key)} style={{ padding: "10px 20px", borderRadius: "var(--radius-pill)", border: newTemplate === t.key ? "var(--border)" : "3px solid transparent", background: newTemplate === t.key ? "var(--grape-100)" : "var(--paper-000)", font: "var(--type-button)", color: newTemplate === t.key ? "var(--grape-700)" : "var(--text-muted)", cursor: "pointer" }}>{t.label}</button>
               ))}
             </div>
           </div>
-          <Input label="Owner email" placeholder="owner@business.com" icon="mail" type="email" value={newEmail} onChange={setNewEmail} />
-          <Input label="Owner password" placeholder="Password" icon="lock" type="password" value={newPass} onChange={setNewPass} />
-          <Input label="Staff PIN (optional)" placeholder="4-digit PIN" icon="hash" mono value={newPin} onChange={setNewPin} />
+          <Input
+            label="Owner email"
+            placeholder="owner@business.com"
+            icon="mail"
+            type="email"
+            value={newEmail}
+            onChange={(v) => { setNewEmail(v); if (createFieldErrors.ownerEmail) setCreateFieldErrors((f) => ({ ...f, ownerEmail: undefined })); }}
+            error={createFieldErrors.ownerEmail}
+          />
+          <Input
+            label="Owner password"
+            placeholder="At least 8 characters"
+            icon="lock"
+            type="password"
+            value={newPass}
+            onChange={(v) => { setNewPass(v); if (createFieldErrors.ownerPassword) setCreateFieldErrors((f) => ({ ...f, ownerPassword: undefined })); }}
+            error={createFieldErrors.ownerPassword}
+          />
+          <Input
+            label="Staff PIN (optional)"
+            placeholder="4-6 digit PIN"
+            icon="hash"
+            mono
+            value={newPin}
+            onChange={(v) => { setNewPin(v); if (createFieldErrors.pin) setCreateFieldErrors((f) => ({ ...f, pin: undefined })); }}
+            error={createFieldErrors.pin}
+          />
           <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
             <Button variant="primary" size="md" onClick={handleCreate} disabled={createMut.isPending || !newName || !newEmail || !newPass}>
               {createMut.isPending ? "Creating..." : "Create business"}
             </Button>
             <Button variant="ghost" size="md" onClick={() => setTab("businesses")}>Cancel</Button>
           </div>
-          {createMut.isError && <div style={{ font: "600 14px/1.4 var(--font-body)", color: "var(--danger-ink)" }}>{(createMut.error as any)?.message}</div>}
+          {createFormError && <div role="alert" style={{ font: "600 14px/1.4 var(--font-body)", color: "var(--danger-ink)" }}>{createFormError}</div>}
         </div>
       </Card>
     </div>
