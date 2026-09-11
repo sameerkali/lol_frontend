@@ -58,7 +58,7 @@ export const CHECK_IN_MODE_OPTIONS = [
 ];
 
 export const AFTER_FINAL_OPTIONS = [
-  { value: "reset", label: "Reset the card" },
+  { value: "reset", label: "Keep the ladder (nothing resets)" },
   { value: "next_tier", label: "Move to the next tier" },
 ];
 
@@ -459,6 +459,11 @@ export function MilestonesSection({
             value={afterFinalMilestone}
             onChange={setAfterFinalMilestone}
             options={AFTER_FINAL_OPTIONS}
+            hint={
+              afterFinalMilestone === "reset"
+                ? "Customers keep every reward they've ever earned — finishing the ladder never erases their progress."
+                : "Customers move up to the next tier's own ladder once they finish this one, all the way to your top tier."
+            }
             style={{ maxWidth: 360 }}
           />
 

@@ -24,6 +24,20 @@ import { TopBar } from "../components/navigation/TopBar";
 
 const PHONE_STORAGE_PREFIX = "lol_phone_";
 
+function formatRewardText(rewardType?: string, rewardValue?: string) {
+  const value = (rewardValue || "").trim();
+  switch (rewardType) {
+    case "percent_off":
+      return value ? `${value}% off` : "% off";
+    case "flat_off":
+      return value ? `₹${value} off` : "₹ off";
+    case "free_item":
+      return value || "Free item";
+    default:
+      return value || "Reward";
+  }
+}
+
 export default function CustomerPage({ slug }: { slug: string }) {
   const { data: biz, isLoading: bizLoading } = usePublicBusiness(slug);
   const storageKey = `${PHONE_STORAGE_PREFIX}${slug}`;
@@ -43,6 +57,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
   const [celebrate, setCelebrate] = React.useState<any>(null);
   const [toast, setToast] = React.useState("");
   const [selectedReward, setSelectedReward] = React.useState<any>(null);
+  const [milestoneInfo, setMilestoneInfo] = React.useState<any>(null);
 
   const lookupMut = useCustomerLookup(slug);
   const signupMut = useCustomerSignup(slug);
@@ -101,9 +116,20 @@ export default function CustomerPage({ slug }: { slug: string }) {
   const visits = card?.count || 0;
   const totalTarget = milestones.length ? milestones[milestones.length - 1].count : 15;
   const nextMs = milestones.find((m: any) => m.count > visits) || milestones[milestones.length - 1] || { count: totalTarget, label: "Reward" };
+  const allMilestonesDone = milestones.length > 0 && visits >= milestones[milestones.length - 1].count;
   const unlocked = card?.availableRewards || [];
   const needsBillAmount = biz?.earningMode === "bill_amount" || (biz?.earningMode === "visits_with_min_bill" && biz?.billAmountFieldEnabled);
   const billAmountValid = !needsBillAmount || (billAmount !== "" && billAmount > 0);
+
+  // A milestone is "redeemed" once it's done but no longer sitting in the
+  // unredeemed-only availableRewards list — there's no separate flag to
+  // read for this on the public milestone config itself.
+  const milestoneStatus = (m: { count: number }): "locked" | "unlocked" | "redeemed" => {
+    if (visits < m.count) return "locked";
+    return unlocked.some((u: any) => u.count === m.count) ? "unlocked" : "redeemed";
+  };
+  const milestoneInfoStatus = milestoneInfo ? milestoneStatus(milestoneInfo) : null;
+  const milestoneInfoReward = milestoneInfo ? unlocked.find((u: any) => u.count === milestoneInfo.count) : null;
 
   const openPin = (mode: string, reward?: any) => {
     setPinMode(mode);
@@ -125,7 +151,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
         setPin("");
         setBillAmount("");
         if (res.newlyUnlocked?.length) {
-          setCelebrate(res.newlyUnlocked[0]);
+          setCelebrate({ ...res.newlyUnlocked[0], cardAdvanced: res.cardAdvanced, tierName: res.card?.tierName });
         } else {
           showToast(res.note || "Visit marked");
         }
@@ -259,16 +285,23 @@ export default function CustomerPage({ slug }: { slug: string }) {
       <Card pad={20}>
         <StampGrid total={totalTarget} filled={visits} milestones={milestones.map((m: any) => m.count)} glyph="coffee" columns={5} size={52} />
         <div style={{ marginTop: 20 }}>
-          <ProgressBar value={visits} max={nextMs?.count || totalTarget} label={`Next: ${nextMs?.label || "Reward"}`} />
+          <ProgressBar value={Math.min(visits, nextMs?.count || totalTarget)} max={nextMs?.count || totalTarget} label={allMilestonesDone ? "Every reward unlocked" : `Next: ${nextMs?.label || "Reward"}`} />
         </div>
         <div style={{ font: "var(--type-body-lg)", color: "var(--text-strong)", marginTop: 12, fontWeight: 600 }}>
-          {Math.max(0, (nextMs?.count || totalTarget) - visits)} more {(nextMs?.count || totalTarget) - visits === 1 ? "visit" : "visits"} to {(nextMs?.label || "reward").toLowerCase()}.
+          {allMilestonesDone
+            ? "You've unlocked every reward on this ladder — thanks for being a regular!"
+            : `${Math.max(0, (nextMs?.count || totalTarget) - visits)} more ${(nextMs?.count || totalTarget) - visits === 1 ? "visit" : "visits"} to ${(nextMs?.label || "reward").toLowerCase()}.`}
         </div>
       </Card>
       {milestones.length > 0 && (
         <div>
           <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 12 }}>Milestone ladder</div>
-          <MilestoneLadder milestones={milestones.map((m: any) => ({ count: m.count, label: m.label }))} current={visits} compact />
+          <MilestoneLadder
+            milestones={milestones.map((m: any) => ({ count: m.count, label: m.label, rewardType: m.rewardType, rewardValue: m.rewardValue }))}
+            current={visits}
+            compact
+            onSelect={(m) => setMilestoneInfo(m)}
+          />
         </div>
       )}
       <button
@@ -290,8 +323,8 @@ export default function CustomerPage({ slug }: { slug: string }) {
         unlocked.map((r: any, i: number) => (
           <RewardCard
             key={r._id || i}
-            title={r.label || "Reward"}
-            detail={r.redeemedAt ? "Redeemed at the counter" : `Unlocked at visit ${r.count || "?"}`}
+            title={formatRewardText(r.rewardType, r.rewardValue)}
+            detail={`${r.label ? `${r.label} · ` : ""}${r.redeemedAt ? "Redeemed at the counter" : `Unlocked at visit ${r.count || "?"}`}`}
             state={r.redeemedAt ? "redeemed" : "unlocked"}
             onRedeem={() => !r.redeemedAt && openPin("redeem", r)}
           />
@@ -311,11 +344,20 @@ export default function CustomerPage({ slug }: { slug: string }) {
       ) : (
         history.map((r: any, i: number) => (
           <div key={r._id || i} style={{ display: "flex", gap: 14, alignItems: "center", padding: "12px 14px", background: "var(--paper-000)", border: "var(--border-hair)", borderRadius: "var(--radius-md)" }}>
-            <span style={{ width: 38, height: 38, display: "grid", placeItems: "center", background: r.type === "visit" ? "var(--grape-100)" : "var(--sun-100)", border: "var(--border-hair)", borderRadius: "50%" }}>
+            <span style={{ width: 38, height: 38, flex: "0 0 auto", display: "grid", placeItems: "center", background: r.type === "visit" ? "var(--grape-100)" : "var(--sun-100)", border: "var(--border-hair)", borderRadius: "50%" }}>
               <Icon name={r.type === "visit" ? "stamp" : "gift"} size={18} />
             </span>
-            <span style={{ flex: 1, font: "600 15px/1.3 var(--font-body)", color: "var(--text-strong)" }}>{r.type === "visit" ? "Visit marked" : "Reward redeemed"}</span>
-            <span style={{ font: "var(--type-mono)", color: "var(--text-muted)" }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ font: "600 15px/1.3 var(--font-body)", color: "var(--text-strong)" }}>
+                {r.type === "visit" ? "Visit marked" : "Reward redeemed"}
+              </div>
+              {r.type !== "visit" && (
+                <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", marginTop: 2 }}>
+                  {formatRewardText(r.rewardType, r.rewardValue)}
+                </div>
+              )}
+            </div>
+            <span style={{ font: "var(--type-mono)", color: "var(--text-muted)", flex: "0 0 auto" }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}</span>
           </div>
         ))
       )}
@@ -364,7 +406,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
                 try {
                   const res = await visitMut.mutateAsync({ phone, billAmount: needsBillAmount && billAmount !== "" ? billAmount : undefined });
                   setBillAmount("");
-                  if (res.newlyUnlocked?.length) setCelebrate(res.newlyUnlocked[0]); else showToast(res.note || "Visit marked");
+                  if (res.newlyUnlocked?.length) setCelebrate({ ...res.newlyUnlocked[0], cardAdvanced: res.cardAdvanced, tierName: res.card?.tierName }); else showToast(res.note || "Visit marked");
                 } catch (e: any) { showToast(e.message || "Failed"); }
               }}
               disabled={visitMut.isPending || !billAmountValid}
@@ -378,9 +420,54 @@ export default function CustomerPage({ slug }: { slug: string }) {
         )}
         {toast && <div style={{ position: "absolute", left: 0, right: 0, bottom: 150, display: "grid", placeItems: "center", zIndex: 30 }}><Toast tone="success">{toast}</Toast></div>}
         <Dialog open={pinOpen} title="" onClose={() => setPinOpen(false)} width={380}>
-          <PinPad value={pin} onChange={(v) => { setPin(v); setPinError(""); }} onComplete={completePin} error={pinError} subtitle={pinMode === "visit" ? "Staff confirms your visit." : "Staff confirms the reward."} />
+          <PinPad
+            value={pin}
+            onChange={(v) => { setPin(v); setPinError(""); }}
+            onComplete={completePin}
+            error={pinError}
+            subtitle={pinMode === "visit" ? "Staff confirms your visit." : `Staff confirms your ${formatRewardText(selectedReward?.rewardType, selectedReward?.rewardValue)}.`}
+          />
         </Dialog>
-        <Celebration open={!!celebrate} title={celebrate?.label ? `${celebrate.label} unlocked!` : "Reward unlocked!"} subtitle="Show this to the counter whenever you like." onDismiss={() => { setCelebrate(null); setTab("rewards"); }} />
+        <Celebration
+          open={!!celebrate}
+          title={celebrate ? `${formatRewardText(celebrate.rewardType, celebrate.rewardValue)} unlocked!` : "Reward unlocked!"}
+          subtitle={
+            celebrate?.cardAdvanced && celebrate?.tierName
+              ? `You've reached ${celebrate.tierName}! Show this to the counter whenever you like.`
+              : "Show this to the counter whenever you like."
+          }
+          onDismiss={() => { setCelebrate(null); setTab("rewards"); }}
+        />
+        <Dialog open={!!milestoneInfo} title={milestoneInfo?.label || "Milestone"} onClose={() => setMilestoneInfo(null)} width={360}>
+          {milestoneInfo && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                <span style={{ width: 52, height: 52, flex: "0 0 auto", display: "grid", placeItems: "center", background: "var(--sun-100)", border: "var(--border)", borderRadius: "50%" }}>
+                  <Icon name="gift" size={24} />
+                </span>
+                <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>
+                  {formatRewardText(milestoneInfo.rewardType, milestoneInfo.rewardValue)}
+                </div>
+              </div>
+              <div style={{ font: "var(--type-body)", color: "var(--text-body)" }}>
+                {milestoneInfoStatus === "locked" &&
+                  `${milestoneInfo.count - visits} more ${milestoneInfo.count - visits === 1 ? "visit" : "visits"} to unlock this.`}
+                {milestoneInfoStatus === "unlocked" && "Unlocked! Show this to the counter whenever you're ready to redeem it."}
+                {milestoneInfoStatus === "redeemed" && "Already redeemed — thanks for stopping by!"}
+              </div>
+              {milestoneInfoStatus === "unlocked" && milestoneInfoReward && (
+                <Button
+                  variant="reward"
+                  size="sm"
+                  fullWidth
+                  onClick={() => { setMilestoneInfo(null); openPin("redeem", milestoneInfoReward); }}
+                >
+                  Redeem now
+                </Button>
+              )}
+            </div>
+          )}
+        </Dialog>
       </div>
     </div>
   );

@@ -7,10 +7,12 @@ export function MilestoneLadder({
   milestones = [],
   current = 0,
   compact = false,
+  onSelect,
 }: {
-  milestones: { count: number; label: string }[];
+  milestones: { count: number; label: string; rewardType?: string; rewardValue?: string }[];
   current?: number;
   compact?: boolean;
+  onSelect?: (m: { count: number; label: string; rewardType?: string; rewardValue?: string }) => void;
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -18,7 +20,23 @@ export function MilestoneLadder({
         const done = current >= m.count;
         const next = !done && milestones.slice(0, i).every((p) => current >= p.count);
         return (
-          <div key={m.count} style={{ display: "flex", gap: 16, alignItems: "stretch" }}>
+          <div
+            key={m.count}
+            role={onSelect ? "button" : undefined}
+            tabIndex={onSelect ? 0 : undefined}
+            onClick={onSelect ? () => onSelect(m) : undefined}
+            onKeyDown={
+              onSelect
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelect(m);
+                    }
+                  }
+                : undefined
+            }
+            style={{ display: "flex", gap: 16, alignItems: "stretch", cursor: onSelect ? "pointer" : "default" }}
+          >
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 48 }}>
               <span
                 style={{
@@ -71,6 +89,11 @@ export function MilestoneLadder({
                   : `${m.count - current} more ${m.count - current === 1 ? "visit" : "visits"}`}
               </div>
             </div>
+            {onSelect ? (
+              <span style={{ display: "grid", placeItems: "center", flex: "0 0 auto", color: "var(--text-muted)" }}>
+                <Icon name="arrow-right" size={16} />
+              </span>
+            ) : null}
           </div>
         );
       })}
