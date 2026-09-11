@@ -237,50 +237,50 @@ This is the actual product customers use — test it as if you were a real custo
 - [x] Private/incognito window → always starts fresh (no bleed from a normal window's cached number). (Verified via an equivalent fresh browser context with no shared storage.)
 
 ### 3.4 Card view
-- [ ] Stamp grid renders the correct total and correctly highlights filled stamps.
-- [ ] Progress bar and "N more visits to X" text track the true visit count.
-- [ ] Milestone ladder displays all configured milestones with correct labels/counts.
-- [ ] Tier badge shows on the card only for tiered businesses, and shows the *correct current* tier (re-verify after a tier promotion, see 3.7).
-- [ ] Visit count in the header badge matches the customer's actual total visits.
+- [x] Stamp grid renders the correct total and correctly highlights filled stamps.
+- [x] Progress bar and "N more visits to X" text track the true visit count.
+- [x] Milestone ladder displays all configured milestones with correct labels/counts.
+- [x] Tier badge shows on the card only for tiered businesses, and shows the *correct current* tier (re-verify after a tier promotion, see 3.7).
+- [x] Visit count in the header badge matches the customer's actual total visits.
 
 ### 3.5 Marking a visit — Automatic check-in
-- [ ] "Mark my visit" button visible and, for a plain visits-mode business, tappable with no extra field.
-- [ ] Tap it → stamp count increments by 1, a toast/confirmation shows, and (if applicable) a celebration screen appears exactly when a milestone is newly reached.
-- [ ] Rapid double-tap → doesn't double-count the visit (button should disable while the request is in flight).
-- [ ] Hitting the daily stamp limit (if > 0) → visit still "marked" from the customer's perspective (no hard error), but a note explains no stamp was awarded, and the count doesn't increment further.
+- [x] "Mark my visit" button visible and, for a plain visits-mode business, tappable with no extra field.
+- [x] Tap it → stamp count increments by 1, a toast/confirmation shows, and (if applicable) a celebration screen appears exactly when a milestone is newly reached.
+- [x] Rapid double-tap → doesn't double-count the visit (button should disable while the request is in flight). Verified with 5 simultaneous rapid clicks → exactly 1 visit recorded.
+- [x] Hitting the daily stamp limit (if > 0) → visit still "marked" from the customer's perspective (no hard error), but a note explains no stamp was awarded, and the count doesn't increment further. Toast reads "Daily stamp limit (1) already reached for today"; `count` stayed at 1 while `totalVisits` correctly went to 2.
 
 ### 3.6 Marking a visit — PIN check-in
-- [ ] "Mark my visit" opens a PIN pad instead of marking immediately.
-- [ ] Entering the **correct** PIN confirms the visit exactly as in automatic mode.
-- [ ] Entering an **incorrect** PIN → clear "incorrect" error, PIN entry resets, no visit recorded.
-- [ ] **PIN length regression check** — this was a real, serious bug (the PIN pad used to hard-submit after exactly 4 digits no matter what, so any business with a 5- or 6-digit PIN could never successfully confirm anything):
-  - [ ] Business with a 4-digit PIN: entering the 4th digit auto-submits.
-  - [ ] Business with a 5-digit PIN: after 4 digits, nothing auto-submits yet; a green checkmark/confirm button becomes tappable; entering the 5th digit also still works (auto-submits at 5, or is confirmable); test both the "type all 5 then it's still waiting for confirm" and "type 5 and confirm manually" paths.
-  - [ ] Business with a 6-digit PIN: auto-submits exactly at the 6th digit.
-  - [ ] Try tapping the confirm/checkmark button with only 2–3 digits entered → should be disabled/no-op (below the 4-digit minimum).
-  - [ ] Backspace (delete key) works correctly at every digit count, including reducing back below 4 digits (confirm button should become disabled again).
-- [ ] If a business has **PIN check-in mode selected but no PIN ever configured** — try to mark a visit. Confirm what actually happens (every PIN attempt should fail as "incorrect," since there's nothing to match); this is a real dead end for that business until the owner sets a PIN — check whether the error message gives the customer/staff any useful clue, and log it as a UX gap if not.
-- [ ] Rate limiting: submit many rapid PIN attempts (15+ in under 10 minutes) → eventually blocked with a "too many attempts" message rather than allowed to brute-force indefinitely.
+- [x] "Mark my visit" opens a PIN pad instead of marking immediately.
+- [x] Entering the **correct** PIN confirms the visit exactly as in automatic mode.
+- [x] Entering an **incorrect** PIN → clear "incorrect" error, PIN entry resets, no visit recorded. Also verified a *subsequent* correct PIN entry (after a wrong one) still confirms normally.
+- [x] **PIN length regression check** — this was a real, serious bug (the PIN pad used to hard-submit after exactly 4 digits no matter what, so any business with a 5- or 6-digit PIN could never successfully confirm anything):
+  - [x] Business with a 4-digit PIN: entering the 4th digit auto-submits. **Correction after the fix**: a 4-digit PIN no longer auto-submits either — only exactly 6 digits does. 4- and 5-digit PINs require an explicit tap on the confirm (checkmark) button once the 4-digit minimum is reached. This is the intentional new behavior (the whole point of the fix was that a fixed auto-submit length can't work when PINs are 4–6 digits), not a regression — just don't expect auto-submit at 4 anymore.
+  - [x] Business with a 5-digit PIN: after 4 digits, nothing auto-submits yet; a green checkmark/confirm button becomes tappable; entering the 5th digit also still works (auto-submits at 5, or is confirmable); test both the "type all 5 then it's still waiting for confirm" and "type 5 and confirm manually" paths.
+  - [x] Business with a 6-digit PIN: auto-submits exactly at the 6th digit.
+  - [x] Try tapping the confirm/checkmark button with only 2–3 digits entered → should be disabled/no-op (below the 4-digit minimum).
+  - [x] Backspace (delete key) works correctly at every digit count, including reducing back below 4 digits (confirm button should become disabled again).
+- [x] If a business has **PIN check-in mode selected but no PIN ever configured** — try to mark a visit. Confirm what actually happens (every PIN attempt should fail as "incorrect," since there's nothing to match); this is a real dead end for that business until the owner sets a PIN — check whether the error message gives the customer/staff any useful clue, and log it as a UX gap if not. Confirmed: every attempt fails with a plain "Incorrect PIN" — no hint that the real problem is "no PIN configured." Still the known gap from section 5, not a new issue.
+- [x] Rate limiting: submit many rapid PIN attempts (15+ in under 10 minutes) → eventually blocked with a "too many attempts" message rather than allowed to brute-force indefinitely. Blocked on the 16th attempt.
 
 ### 3.7 Milestones, tiers, and progression
-- [ ] Reach an exact milestone count → newly unlocked reward appears in the Rewards tab and triggers the celebration screen.
-- [ ] For a **reset**-mode business: completing the final milestone resets the visit count back to 0 for the next cycle (confirm the card visually reflects this immediately, not after a refresh).
-- [ ] For a **tiers**-mode business: completing the final milestone in the current tier promotes the customer to the next tier — confirm the tier badge updates immediately, and the milestone ladder shown now reflects the *new* tier's milestones, not the old one's.
-- [ ] Reaching the top tier's final milestone → verify the documented/expected end behavior (no further promotion possible) rather than crashing or looping.
-- [ ] A customer's tier at signup matches the business's first configured tier (Bronze/whatever is first) immediately — not just after their first visit.
+- [x] Reach an exact milestone count → newly unlocked reward appears in the Rewards tab and triggers the celebration screen.
+- [x] For a **reset**-mode business: completing the final milestone resets the visit count back to 0 for the next cycle (confirm the card visually reflects this immediately, not after a refresh). Verified via API immediately after the qualifying visit: `count: 0`, `cardCycle: 1`.
+- [x] For a **tiers**-mode business: completing the final milestone in the current tier promotes the customer to the next tier — confirm the tier badge updates immediately, and the milestone ladder shown now reflects the *new* tier's milestones, not the old one's. Verified: a promoted customer's card shows the new tier's badge and its own milestone ladder, not the previous tier's.
+- [x] Reaching the top tier's final milestone → verify the documented/expected end behavior (no further promotion possible) rather than crashing or looping. Confirmed via the code and empirically: no crash, no further promotion, but worth knowing precisely what "stays maxed out" means — `count` is **not** frozen, it keeps incrementing with every further visit (only the tier-promotion logic stops firing); the stamp grid still renders correctly with no overflow since it's a fixed-size grid that just shows fully filled once `count` reaches its `total`. No visual or functional bug, just don't expect the number itself to stop climbing.
+- [x] A customer's tier at signup matches the business's first configured tier (Bronze/whatever is first) immediately — not just after their first visit.
 
 ### 3.8 Redeeming a reward
 - [x] Rewards tab lists unlocked-but-unredeemed rewards distinctly from already-redeemed ones. **BUG FOUND & FIXED**: the Rewards tab read `card.milestonesUnlocked`, a field that has never existed in the public API's response (the backend returns it as `card.availableRewards`). This meant `unlocked` was *always* an empty array — the Rewards tab permanently showed "Nothing unlocked yet" regardless of actual progress, and the Redeem button could never appear. **Redemption was completely unreachable through the normal customer-facing UI.** Fixed in `CustomerPage.tsx` by reading the correct field. One resulting behavior change worth knowing: `availableRewards` is pre-filtered server-side to unredeemed items only, so a redeemed reward now disappears from this tab entirely (rather than staying with "redeemed" styling) — it shows up in History instead, which is a clean, working design, just different from what "distinctly from already-redeemed ones" originally implied. Verified end-to-end after the fix: unlock → appears in Rewards tab with a working Redeem button → redeem via PIN → disappears from Rewards → appears in History as "Reward redeemed."
-- [ ] Tapping "Redeem" **always** opens a PIN pad — confirm this is true even for a business whose check-in mode is set to Automatic (redemption is intentionally always staff-gated, regardless of check-in mode — verify this is really the case and not just for PIN-mode businesses).
-- [ ] Correct PIN → reward marked redeemed, moves out of the redeemable list, and is reflected in History.
-- [ ] Incorrect PIN → rejected, reward stays unredeemed.
-- [ ] Try to redeem the same reward twice → second attempt is rejected ("already redeemed"), not double-counted.
-- [ ] If the business has never set a PIN at all, confirm redemption is effectively impossible (every PIN attempt fails) — same gap as 3.6, worth flagging together.
+- [x] Tapping "Redeem" **always** opens a PIN pad — confirm this is true even for a business whose check-in mode is set to Automatic (redemption is intentionally always staff-gated, regardless of check-in mode — verify this is really the case and not just for PIN-mode businesses). Confirmed on an automatic-check-in business: redeeming still opens a PIN pad with "Staff confirms the reward."
+- [x] Correct PIN → reward marked redeemed, moves out of the redeemable list, and is reflected in History.
+- [x] Incorrect PIN → rejected, reward stays unredeemed.
+- [x] Try to redeem the same reward twice → second attempt is rejected ("already redeemed"), not double-counted. (The Redeem button itself disappears once redeemed, since the reward drops out of `availableRewards` — there's no way to even attempt a second redemption through the UI; the backend also independently rejects it if attempted directly.)
+- [x] If the business has never set a PIN at all, confirm redemption is effectively impossible (every PIN attempt fails) — same gap as 3.6, worth flagging together.
 
 ### 3.9 History
-- [ ] Every marked visit and every redemption appears in History, newest first, with correct dates.
-- [ ] Visits that earned 0 stamps (blocked by daily limit or bill-amount minimum) still appear in history — confirm whether they're visually distinguished from stamp-earning visits or look identical (worth a UX note either way).
-- [ ] Empty history (brand-new customer) → clean empty state, not a blank/broken screen.
+- [x] Every marked visit and every redemption appears in History, newest first, with correct dates.
+- [x] Visits that earned 0 stamps (blocked by daily limit or bill-amount minimum) still appear in history — confirm whether they're visually distinguished from stamp-earning visits or look identical (worth a UX note either way). Both totalVisits (2) and count (1) were consistent with a blocked second visit, and the second entry does appear in history — visually it looks identical to a stamp-earning visit (same "Visit marked" row, no note tag), which is a UX note but not a bug.
+- [x] Empty history (brand-new customer) → clean empty state, not a blank/broken screen.
 
 ### 3.10 Full responsiveness (this is the most important surface to check on mobile)
 - [ ] On a real phone-width viewport, the customer page fills the screen edge-to-edge (no fixed-size box that overflows or leaves dead space) — regression check, this used to be a hard-coded 420×860px box that broke on real phones.
