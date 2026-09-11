@@ -21,7 +21,7 @@ export function Skeleton({
         flex: "0 0 auto",
         background: "linear-gradient(100deg, var(--paper-200) 35%, var(--paper-050) 50%, var(--paper-200) 65%)",
         backgroundSize: "300% 100%",
-        animation: "lol-shine 3s linear infinite",
+        animation: "lol-shine 10s linear infinite",
         ...style,
       }}
     />
