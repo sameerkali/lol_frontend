@@ -84,6 +84,15 @@ export default function CustomerPage({ slug }: { slug: string }) {
     setScreen("lookup");
   };
 
+  // The scrollable content area is one stable DOM node across screen/tab
+  // changes (only its children swap), so a scroll position left over from
+  // the previous screen — e.g. from focusing a field near the bottom —
+  // otherwise bleeds into the next screen and shifts it up under the header.
+  const contentRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [screen, tab]);
+
   const milestones = biz?.milestones || [];
   const card = cardData?.card || cardData;
   const history = historyData?.history || historyData || [];
@@ -186,7 +195,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
         <Badge tone="neutral">{biz.name}</Badge>
       </div>
       <div>
-        <h1 style={{ margin: 0, font: "var(--type-display)", fontSize: 58, letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>
+        <h1 style={{ margin: 0, font: "var(--type-display)", fontSize: 58, lineHeight: 1.05, letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>
           Your card lives on your phone number.
         </h1>
         <p style={{ font: "var(--type-body-lg)", color: "var(--text-muted)", marginTop: 10 }}>
@@ -202,9 +211,9 @@ export default function CustomerPage({ slug }: { slug: string }) {
 
   const signupFields = biz.signupFields || {};
   const Signup = (
-    <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 18, flex: 1 }}>
+    <div style={{ padding: "28px 24px 24px", display: "flex", flexDirection: "column", gap: 18, flex: 1 }}>
       <div>
-        <h1 style={{ margin: 0, font: "var(--type-title)", fontSize: 42, letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>Start your card</h1>
+        <h1 style={{ margin: 0, font: "var(--type-title)", fontSize: 42, lineHeight: 1.1, letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>Start your card</h1>
         <p style={{ font: "var(--type-body)", color: "var(--text-muted)", marginTop: 6 }}>
           {signupFields.name ? `${biz.name} asks for a name. ` : ""}Everything else is optional.
         </p>
@@ -310,7 +319,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
     <div className="lol-page-center">
       <div className="lol-customer-frame">
         <TopBar title={biz.name} subtitle={biz.location || ""} logo={Logo} right={screen !== "lookup" ? <Badge tone="neutral" size="sm">{visits} visits</Badge> : null} tone={biz.branding?.primaryColor || "var(--grape-500)"} />
-        <div style={{ flex: 1, overflowY: "auto" }}>{body}</div>
+        <div ref={contentRef} style={{ flex: 1, overflowY: "auto" }}>{body}</div>
         {screen === "card" && tab === "card" && biz.checkInMode !== "automatic" && (
           <div style={{ padding: "14px 20px 16px", borderTop: "var(--border)", background: "var(--paper-000)" }}>
             <Button size="lg" fullWidth icon={<Icon name="hand" size={21} />} onClick={() => openPin("visit")} disabled={visitMut.isPending}>
