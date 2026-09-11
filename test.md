@@ -77,51 +77,51 @@ Open a business you created above (`/admin/businesses/[id]`) and go through ever
   - [x] Stamp limit per day: try `-1` → rejected/clamped. Try `0` → **accepted** (means unlimited, not zero visits — verify on the customer page that a business with limit 0 lets a customer earn stamps on multiple visits in the same day). Try a very large number (e.g. 9999) → either accepted or clamped at the documented max; confirm it isn't silently ignored.
   - [x] "Mark customer lapsed after (days)" — try 0 and a negative number → rejected; try a normal value (30, 90) → saved.
   - [x] Save with an invalid field present → Save button stays disabled, not a failed network call. **Correction**: the generic "fix the highlighted fields" summary message is a Milestones-tab-only affordance, not present on Earning & check-in — that tab instead shows the error right under the specific invalid field (e.g. "Min 1" under ₹ per point), which is adequate but inconsistent with Milestones' style. Not a bug, just a minor UX inconsistency worth knowing about.
-- [ ] **Milestones**:
-  - [ ] Default "reset" mode: add/edit/remove milestones in the ladder; each milestone needs a count, reward type, value, and label — try leaving one blank and confirm Save is blocked with a clear per-field error.
-  - [ ] Switch "After the final milestone" to "Move to the next tier" → the milestone ladder editor is replaced by the Tiers editor.
-  - [ ] On a business with zero tiers configured, click **"Set up 10 tiers"** → generates a full 10-tier ladder (Bronze → Legend) with sane defaults, and Save is immediately enabled (not blocked by empty-required-field validation).
-  - [ ] Edit a tier's name to blank → inline "Required" error, Save blocked.
-  - [ ] Add a custom tier manually via "Add tier" instead of the generator → works, with its own milestone sub-ladder.
-  - [ ] Delete a tier → removed from the list; deleting all tiers down to zero blocks Save (tiers mode requires at least one tier).
-  - [ ] Switch from "next tier" back to "reset" → milestone ladder editor reappears; verify no data loss/corruption switching back and forth before saving.
-  - [ ] Save tiers, then check the **Customers** tab and **Dashboard** — a newly signed-up customer should show the first tier immediately, and the dashboard's "Customers by tier" widget should reflect real counts.
+- [x] **Milestones**:
+  - [x] Default "reset" mode: add/edit/remove milestones in the ladder; each milestone needs a count, reward type, value, and label — try leaving one blank and confirm Save is blocked with a clear per-field error.
+  - [x] Switch "After the final milestone" to "Move to the next tier" → the milestone ladder editor is replaced by the Tiers editor.
+  - [x] On a business with zero tiers configured, click **"Set up 10 tiers"** → generates a full 10-tier ladder (Bronze → Legend) with sane defaults, and Save is immediately enabled (not blocked by empty-required-field validation).
+  - [x] Edit a tier's name to blank → inline "Required" error, Save blocked.
+  - [x] Add a custom tier manually via "Add tier" instead of the generator → works, with its own milestone sub-ladder.
+  - [x] Delete a tier → removed from the list; deleting all tiers down to zero blocks Save (tiers mode requires at least one tier).
+  - [x] Switch from "next tier" back to "reset" → milestone ladder editor reappears; verify no data loss/corruption switching back and forth before saving. (Also verified switching forward again afterward doesn't crash.)
+  - [x] Save tiers, then check the **Customers** tab and **Dashboard** — a newly signed-up customer should show the first tier immediately, and the dashboard's "Customers by tier" widget should reflect real counts. Verified end-to-end: signed up a fresh customer via the public API immediately after saving a new tier config, confirmed `tierName` was assigned instantly (no visit required), and confirmed both the Customers tab and the Dashboard's "Customers by tier" widget reflected it correctly.
 - [ ] **Signup & rewards**:
   - [ ] Toggle each signup field (name / email / birthday) independently, save, and confirm on the actual customer signup page (`/b/[slug]`) that exactly the enabled fields appear — not more, not fewer.
   - [ ] Head start: enable it and set a stamp count (0 and a positive number) → a brand-new signup should reflect the head-start stamps immediately on their card, and the customer signup screen should show the "free stamps to start" banner only when `enabled && stamps > 0`.
   - [ ] Head start stamp count: try a negative number → rejected.
-- [ ] **Branding**:
-  - [ ] Change primary/secondary color via the hex inputs. Try an invalid hex (`#zzz`, missing `#`, too short) → validation error, Save blocked.
-  - [ ] Save a valid color pair → the customer page's top bar tone should reflect the new primary color.
-- [ ] **PIN**:
-  - [ ] Set a brand-new 4-digit PIN → saved, and the reveal ("Show"/"Hide") toggle on the Dashboard and here works correctly (masks by default).
-  - [ ] Change an existing PIN to a different value (try 5 and 6 digit lengths too, not just 4) → saved.
-  - [ ] Enter fewer than 4 or more than 6 digits → rejected before save.
-  - [ ] Enter non-numeric input → rejected.
-  - [ ] After setting a 5- or 6-digit PIN here, go confirm a visit on the customer page in PIN mode and verify the full PIN (not just the first 4 digits) is required to confirm — **this was a real bug**, treat it as a priority regression check.
-- [ ] **QR & link**:
-  - [ ] QR image renders and the link under it matches `.../b/[slug]`.
-  - [ ] "Copy link" copies the correct URL to the clipboard (paste it somewhere to confirm).
-  - [ ] "Download PNG" downloads a valid, scannable QR image named after the business slug.
-  - [ ] Scan the QR with an actual phone camera (or a QR reader) → opens the correct customer page.
-- [ ] **Owner account**:
-  - [ ] Reset the owner's password here (admin override, no current password needed) to a new value → log in on `/business/login` with the new password to confirm it actually took effect.
-  - [ ] Try a password under 8 characters → rejected.
-  - [ ] Owner email field is read-only here (cannot be edited) — confirm that's the case.
-- [ ] **Plan & status** (header controls, not a tab):
-  - [ ] Change plan (Trial/Basic/Pro) via the dropdown → persists on reload.
-  - [ ] Click Deactivate → confirmation dialog warns the owner will be logged out and their customer page stops working; confirm it, then:
-    - [ ] Owner's existing business-panel session (in another tab/browser) starts failing its next request (403) instead of silently continuing to work.
-    - [ ] Owner cannot log back into `/business/login` while inactive (clear "account is inactive" error).
-    - [ ] The customer-facing page (`/b/[slug]`) for that business now shows "not available"/not found instead of the normal card flow.
-  - [ ] Click Activate on an inactive business → everything above is restored (login works again, customer page works again).
-- [ ] **Danger zone**:
-  - [ ] Delete button is disabled/no-ops until you type the business's exact name into the confirmation field.
-  - [ ] Typing the wrong name (typo, different case) keeps Delete disabled.
-  - [ ] Typing the exact name enables Delete; confirm it removes the business, its customers, and its visit history, and redirects back to `/admin`.
-  - [ ] After deletion, hitting the old `/admin/businesses/[id]` URL directly (e.g. via back button or bookmark) shows a proper "couldn't be loaded" state — **not an infinite loading skeleton** (this was a real bug, verify the fix holds).
-- [ ] Tab content doesn't bleed between businesses: open business A's Milestones tab, navigate to business B, confirm B's data loads fresh (not a stale cache of A's settings).
-- [ ] **Mobile**: every tab above remains usable at narrow width — tab pills wrap, forms stack, nothing overflows horizontally.
+- [x] **Branding**:
+  - [x] Change primary/secondary color via the hex inputs. Try an invalid hex (`#zzz`, missing `#`, too short) → validation error, Save blocked.
+  - [x] Save a valid color pair → the customer page's top bar tone should reflect the new primary color. (Verified via computed style: `#1B1526` → `rgb(27, 21, 38)` header background.)
+- [x] **PIN**:
+  - [x] Set a brand-new 4-digit PIN → saved, and the reveal ("Show"/"Hide") toggle on the Dashboard and here works correctly (masks by default). (The toggle is an icon-only button — `aria-label="Show PIN"`/`"Hide PIN"`, no visible text — worth knowing if you're locating it by text in future automated tests.)
+  - [x] Change an existing PIN to a different value (try 5 and 6 digit lengths too, not just 4) → saved.
+  - [x] Enter fewer than 4 or more than 6 digits → rejected before save. **Note**: rejection happens on click (shows a "PIN must be 4–6 digits" inline error and never fires the save request), not by pre-disabling the button — the button is only disabled while the field is empty. Functionally equivalent (no invalid PIN ever reaches the server), just a different mechanism than the Earning/Milestones tabs' pre-disable pattern.
+  - [x] Enter non-numeric input → rejected (same click-then-error mechanism).
+  - [x] After setting a 5- or 6-digit PIN here, go confirm a visit on the customer page in PIN mode and verify the full PIN (not just the first 4 digits) is required to confirm — **this was a real bug**, treat it as a priority regression check. (Fixed and re-verified earlier this session for 4, 5, and 6-digit PINs.)
+- [x] **QR & link**:
+  - [x] QR image renders and the link under it matches `.../b/[slug]`.
+  - [x] "Copy link" copies the correct URL to the clipboard (paste it somewhere to confirm).
+  - [x] "Download PNG" downloads a valid, scannable QR image named after the business slug.
+  - [ ] Scan the QR with an actual phone camera (or a QR reader) → opens the correct customer page. *(Not automatable from this environment — needs a real device. The underlying link and PNG were verified correct; a manual scan is the only remaining gap.)*
+- [x] **Owner account**:
+  - [x] Reset the owner's password here (admin override, no current password needed) to a new value → log in on `/business/login` with the new password to confirm it actually took effect.
+  - [x] Try a password under 8 characters → rejected.
+  - [x] Owner email field is read-only here (cannot be edited) — confirm that's the case.
+- [x] **Plan & status** (header controls, not a tab):
+  - [x] Change plan (Trial/Basic/Pro) via the dropdown → persists on reload.
+  - [x] Click Deactivate → confirmation dialog warns the owner will be logged out and their customer page stops working; confirm it, then:
+    - [x] Owner's existing business-panel session (in another tab/browser) starts failing its next request (403) instead of silently continuing to work.
+    - [x] Owner cannot log back into `/business/login` while inactive (clear "account is inactive" error).
+    - [x] The customer-facing page (`/b/[slug]`) for that business now shows "not available"/not found instead of the normal card flow.
+  - [x] Click Activate on an inactive business → everything above is restored (login works again, customer page works again).
+- [x] **Danger zone**:
+  - [x] Delete button is disabled/no-ops until you type the business's exact name into the confirmation field.
+  - [x] Typing the wrong name (typo, different case) keeps Delete disabled.
+  - [x] Typing the exact name enables Delete; confirm it removes the business, its customers, and its visit history, and redirects back to `/admin`.
+  - [x] After deletion, hitting the old `/admin/businesses/[id]` URL directly (e.g. via back button or bookmark) shows a proper "couldn't be loaded" state — **not an infinite loading skeleton** (this was a real bug, verify the fix holds). Confirmed holding.
+- [x] Tab content doesn't bleed between businesses: open business A's Milestones tab, navigate to business B, confirm B's data loads fresh (not a stale cache of A's settings).
+- [x] **Mobile**: every tab above remains usable at narrow width — tab pills wrap, forms stack, nothing overflows horizontally. (All 8 tabs checked individually at 320px — zero horizontal overflow on any.)
 
 ---
 
@@ -130,21 +130,21 @@ Open a business you created above (`/admin/businesses/[id]`) and go through ever
 Test as the owner of a business you created above (or `farzi cafe`, the existing production-ish business — **be careful not to leave test data in it**; prefer a disposable test business for anything destructive).
 
 ### 2.1 Login & session
-- [ ] Log in with correct owner email/password → lands on `/business/[id]` (Dashboard).
-- [ ] Wrong password / unknown email → clear, generic error.
-- [ ] Log in to a **deactivated** business → explicit "account is inactive" error, not a generic failure.
-- [ ] Refresh mid-session → stays logged in.
-- [ ] Log out via sidebar → confirmation dialog, Cancel/confirm both behave correctly.
-- [ ] **Mobile**: open the drawer, tap Logout → drawer closes, confirmation dialog fully visible and its buttons are clickable (regression check — this was broken: the dialog used to render underneath the drawer).
+- [x] Log in with correct owner email/password → lands on `/business/[id]` (Dashboard).
+- [x] Wrong password / unknown email → clear, generic error.
+- [x] Log in to a **deactivated** business → explicit "account is inactive" error, not a generic failure.
+- [x] Refresh mid-session → stays logged in.
+- [x] Log out via sidebar → confirmation dialog, Cancel/confirm both behave correctly.
+- [x] **Mobile**: open the drawer, tap Logout → drawer closes, confirmation dialog fully visible and its buttons are clickable (regression check — this was broken: the dialog used to render underneath the drawer).
 
 ### 2.2 Dashboard
-- [ ] Stat tiles (Total customers, Visits 30d, Redemptions 30d, Repeat visit rate) load and show real numbers, not stuck on a loading skeleton.
-- [ ] "Customers by tier" widget: absent entirely for a business not using tiers; present and accurate (counts sum to total tiered customers) for one that is.
-- [ ] "Birthdays today 🎉" widget: only appears when at least one customer's birthday (MM-DD) matches today's date; shows name/phone for each.
-- [ ] Business PIN widget: shows "Not set" if no PIN configured; shows masked dots with a working Show/Hide toggle if one is; "Change" button jumps to Settings → PIN tab.
-- [ ] "Recent customers" list shows up to 5 most recent, each with visit/point counts and a tier badge (or "—" if untiered).
-- [ ] Sign up a brand-new customer from another tab/device while the Dashboard stays open → within ~20 seconds the numbers/recent list update on their own (regression check — this used to require a manual page refresh to see new signups).
-- [ ] Empty business (zero customers): dashboard doesn't crash, shows sensible zero/empty states throughout.
+- [x] Stat tiles (Total customers, Visits 30d, Redemptions 30d, Repeat visit rate) load and show real numbers, not stuck on a loading skeleton.
+- [x] "Customers by tier" widget: absent entirely for a business not using tiers; present and accurate (counts sum to total tiered customers) for one that is.
+- [x] "Birthdays today 🎉" widget: only appears when at least one customer's birthday (MM-DD) matches today's date; shows name/phone for each. Verified it correctly excludes a same-day-signed-up customer with no birthday set.
+- [x] Business PIN widget: shows "Not set" if no PIN configured; shows masked dots with a working Show/Hide toggle if one is; "Change" button jumps to Settings → PIN tab.
+- [x] "Recent customers" list shows up to 5 most recent, each with visit/point counts and a tier badge (or "—" if untiered).
+- [x] Sign up a brand-new customer from another tab/device while the Dashboard stays open → within ~20 seconds the numbers/recent list update on their own (regression check — this used to require a manual page refresh to see new signups). Verified live: signed up a customer via the API while the dashboard page sat idle (no reload), and the new customer appeared in "Recent customers" after waiting the refetch interval out.
+- [x] Empty business (zero customers): dashboard doesn't crash, shows sensible zero/empty states throughout.
 
 ### 2.3 Milestones
 - [ ] Same checks as Admin → Business detail → Milestones (section 1.4) — verify the owner-facing version behaves identically to the admin override version.
