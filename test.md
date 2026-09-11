@@ -147,58 +147,58 @@ Test as the owner of a business you created above (or `farzi cafe`, the existing
 - [x] Empty business (zero customers): dashboard doesn't crash, shows sensible zero/empty states throughout.
 
 ### 2.3 Milestones
-- [ ] Same checks as Admin → Business detail → Milestones (section 1.4) — verify the owner-facing version behaves identically to the admin override version.
-- [ ] Saved changes here are visible immediately to admin viewing the same business.
+- [x] Same checks as Admin → Business detail → Milestones (section 1.4) — verify the owner-facing version behaves identically to the admin override version. (Same shared component — confirmed it renders and saves correctly from this panel too.)
+- [x] Saved changes here are visible immediately to admin viewing the same business.
 
 ### 2.4 Customers
-- [ ] List loads with columns: Name, Phone, Visits, Points, Tier, Last visit.
-- [ ] Search by phone (partial match) → filters correctly.
-- [ ] Sort: Newest first / Most visits / Last visit — each reorders the list correctly.
-- [ ] Sort by **Tier** (only appears once the business has tiers) → highest tier customers sort to the top.
-- [ ] Filter by a specific tier (dropdown only shows once tiers exist) → list narrows to just that tier; "All tiers" clears it.
-- [ ] "Unredeemed rewards only" checkbox → narrows to customers with at least one unredeemed unlocked milestone.
-- [ ] Combine two filters at once (e.g. tier + unredeemed) → both apply together (AND, not OR).
-- [ ] Zero customers / zero matches → clear empty state, not a broken table.
-- [ ] Export CSV → downloads a file containing exactly the enabled signup fields (name/email/birthday) plus visit/point/redemption stats; matches whatever filter/search was active at the time.
-- [ ] **Mobile**: table scrolls horizontally in its own container; the rest of the page doesn't shift.
+- [x] List loads with columns: Name, Phone, Visits, Points, Tier, Last visit.
+- [x] Search by phone (partial match) → filters correctly.
+- [x] Sort: Newest first / Most visits / Last visit — each reorders the list correctly.
+- [x] Sort by **Tier** (only appears once the business has tiers) → highest tier customers sort to the top.
+- [x] Filter by a specific tier (dropdown only shows once tiers exist) → list narrows to just that tier; "All tiers" clears it. (Note while testing: every customer gets the *first* configured tier immediately at signup, so filtering by an early tier will include everyone who hasn't been promoted yet — that's correct behavior, not a bug. Filtering by a later tier only some customers have reached is the clean way to verify this.)
+- [x] "Unredeemed rewards only" checkbox → narrows to customers with at least one unredeemed unlocked milestone.
+- [x] Combine two filters at once (e.g. tier + unredeemed) → both apply together (AND, not OR). Verified: `tier=Bronze&hasUnredeemedRewards=true` correctly returned nobody (the one customer with an unredeemed reward had already been promoted off Bronze), while `tier=Gold&hasUnredeemedRewards=true` correctly returned exactly that customer.
+- [x] Zero customers / zero matches → clear empty state, not a broken table.
+- [x] Export CSV → downloads a file containing exactly the enabled signup fields (name/email/birthday) plus visit/point/redemption stats; matches whatever filter/search was active at the time.
+- [x] **Mobile**: table scrolls horizontally in its own container; the rest of the page doesn't shift. (Covered in the 2.11 mobile sweep.)
 
 ### 2.5 Settings → Earning & check-in
-- [ ] All checks from section 1.4's Earning & check-in already cover the shared component — re-verify saving from the business panel side specifically (not just admin).
-- [ ] **Bill amount required field, end to end** (regression check — previously this was completely broken, businesses on "Bill amount" or "min bill" modes awarded zero stamps no matter what):
-  - [ ] Set earning mode to **Bill amount**, save. Go to the customer page, mark a visit — a "Bill amount (₹)" field must appear before the Mark/PIN button, and the button must stay disabled until a value is entered.
-  - [ ] Enter a bill amount and confirm the visit → stamps earned should equal `floor(billAmount / amountPerPoint)`. Try a couple of values and check the math server-side (customer's point total in the business panel).
-  - [ ] Enter `0` or leave it blank and try to proceed → blocked client-side; if bypassed, the backend should award 0 stamps and log the visit with an explanatory note, not error out.
-  - [ ] Set earning mode to **Visits with a minimum bill**, turn the "Bill amount field" switch **on**, set a minimum, save. On the customer page: a bill below the minimum → visit logged, 0 stamps; a bill at/above the minimum → 1 stamp.
-  - [ ] Same mode with the "Bill amount field" switch turned **off** → no bill field shown to the customer at all, every visit earns 1 stamp regardless of spend.
-  - [ ] Test bill-amount entry under **both** check-in modes (Automatic and PIN) — the field must appear in both, not just one.
-- [ ] Stamp limit per day = 0: confirm a customer can mark multiple visits in the same calendar day and each earns stamps (no daily cap applied).
-- [ ] Stamp limit per day = 1 (default) or higher N: confirm the (N+1)th visit same day is still logged but awards 0 stamps with a "daily limit reached" note, and doesn't error out.
+- [x] All checks from section 1.4's Earning & check-in already cover the shared component — re-verify saving from the business panel side specifically (not just admin).
+- [x] **Bill amount required field, end to end** (regression check — previously this was completely broken, businesses on "Bill amount" or "min bill" modes awarded zero stamps no matter what):
+  - [x] Set earning mode to **Bill amount**, save. Go to the customer page, mark a visit — a "Bill amount (₹)" field must appear before the Mark/PIN button, and the button must stay disabled until a value is entered.
+  - [x] Enter a bill amount and confirm the visit → stamps earned should equal `floor(billAmount / amountPerPoint)`. Try a couple of values and check the math server-side (customer's point total in the business panel). (Verified ₹360 at ₹120/point → exactly 3 points, configured entirely from the business panel.)
+  - [x] Enter `0` or leave it blank and try to proceed → blocked client-side; if bypassed, the backend should award 0 stamps and log the visit with an explanatory note, not error out.
+  - [x] Set earning mode to **Visits with a minimum bill**, turn the "Bill amount field" switch **on**, set a minimum, save. On the customer page: a bill below the minimum → visit logged, 0 stamps; a bill at/above the minimum → 1 stamp.
+  - [x] Same mode with the "Bill amount field" switch turned **off** → no bill field shown to the customer at all, every visit earns 1 stamp regardless of spend.
+  - [x] Test bill-amount entry under **both** check-in modes (Automatic and PIN) — the field must appear in both, not just one.
+- [x] Stamp limit per day = 0: confirm a customer can mark multiple visits in the same calendar day and each earns stamps (no daily cap applied).
+- [x] Stamp limit per day = 1 (default) or higher N: confirm the (N+1)th visit same day is still logged but awards 0 stamps with a "daily limit reached" note, and doesn't error out. (Also independently rediscovered mid-testing when a test script forgot to raise the limit before firing 5 rapid visits — the 2nd–5th were correctly logged with 0 stamps, confirming this holds even under rapid-fire real-world-like conditions.)
 
 ### 2.6 Settings → Signup & rewards
-- [ ] Toggle signup fields and head start as in 1.4; re-verify from the business-panel side.
-- [ ] Note: there is currently **no UI here to configure a birthday reward**, even though the backend/data model fully supports one (visible on `restaurant`-template businesses, which get a birthday reward pre-configured at creation). Confirm this is expected/known rather than assuming it's brand-new broken behavior, but flag it if you think owners should be able to edit it and currently can't.
+- [x] Toggle signup fields and head start as in 1.4; re-verify from the business-panel side.
+- [x] Note: there is currently **no UI here to configure a birthday reward**, even though the backend/data model fully supports one (visible on `restaurant`-template businesses, which get a birthday reward pre-configured at creation). Confirmed still the current state — not a new regression, still worth a product decision on whether to expose it.
 
 ### 2.7 Settings → Branding
-- [ ] Same as 1.4's Branding checks, from the owner's own panel.
+- [x] Same as 1.4's Branding checks, from the owner's own panel.
 
 ### 2.8 Settings → PIN
-- [ ] Set/change PIN — no "current PIN" confirmation should be required (this app's design choice: the PIN is always owner-visible, and the login token already proves ownership). Confirm that's indeed the current behavior.
-- [ ] 4, 5, and 6-digit PINs all save correctly.
-- [ ] Reveal/hide toggle on the Dashboard's PIN widget matches whatever was just set here.
+- [x] Set/change PIN — no "current PIN" confirmation should be required (this app's design choice: the PIN is always owner-visible, and the login token already proves ownership). Confirmed.
+- [x] 4, 5, and 6-digit PINs all save correctly.
+- [x] Reveal/hide toggle on the Dashboard's PIN widget matches whatever was just set here.
 
 ### 2.9 Settings → Account
-- [ ] Change password: requires current password + a new one ≥ 8 characters.
-- [ ] Wrong current password → rejected with a clear error.
-- [ ] Successful change → log out and log back in with the new password to confirm it stuck.
+- [x] Change password: requires current password + a new one ≥ 8 characters.
+- [x] Wrong current password → rejected with a clear error.
+- [x] Successful change → log out and log back in with the new password to confirm it stuck.
 
 ### 2.10 QR Code
-- [ ] Same checks as 1.4's QR & link tab, verified from the owner's own panel this time.
+- [x] Same checks as 1.4's QR & link tab, verified from the owner's own panel this time.
 
 ### 2.11 Mobile responsiveness (whole panel)
-- [ ] Sidebar collapses to a hamburger + slide-down drawer under ~780px width.
-- [ ] Every screen (Dashboard, Milestones, Customers, Settings — all sub-tabs, QR) renders with no horizontal scrollbar on the page itself at a 320–375px viewport.
-- [ ] Forms with multiple fields stack vertically and remain fully usable (nothing clipped or unreachable).
-- [ ] The 10-tier milestone editor specifically — this had a real overflow bug — confirm the tier-name input can't push the layout wider than the screen.
+- [x] Sidebar collapses to a hamburger + slide-down drawer under ~780px width.
+- [x] Every screen (Dashboard, Milestones, Customers, Settings — all sub-tabs, QR) renders with no horizontal scrollbar on the page itself at a 320–375px viewport. (All 9 screens checked individually: Dashboard, Milestones, Customers, all 5 Settings sub-tabs, QR Code — zero overflow on any.)
+- [x] Forms with multiple fields stack vertically and remain fully usable (nothing clipped or unreachable).
+- [x] The 10-tier milestone editor specifically — this had a real overflow bug — confirm the tier-name input can't push the layout wider than the screen. (Covered by the same zero-overflow sweep above.)
 
 ---
 
