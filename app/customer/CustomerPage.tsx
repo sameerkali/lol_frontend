@@ -21,13 +21,19 @@ import { EmptyState } from "../components/feedback/EmptyState";
 import { BottomBar } from "../components/navigation/BottomBar";
 import { TopBar } from "../components/navigation/TopBar";
 
+const PHONE_STORAGE_PREFIX = "lol_phone_";
+
 export default function CustomerPage({ slug }: { slug: string }) {
   const { data: biz, isLoading: bizLoading } = usePublicBusiness(slug);
+  const storageKey = `${PHONE_STORAGE_PREFIX}${slug}`;
 
   const [screen, setScreen] = React.useState<"lookup" | "signup" | "card">("lookup");
+  const [autoChecking, setAutoChecking] = React.useState(true);
   const [tab, setTab] = React.useState("card");
   const [phone, setPhone] = React.useState("");
   const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [birthdayDate, setBirthdayDate] = React.useState("");
   const [pinOpen, setPinOpen] = React.useState(false);
   const [pinMode, setPinMode] = React.useState<string>("visit");
   const [pin, setPin] = React.useState("");
@@ -45,6 +51,38 @@ export default function CustomerPage({ slug }: { slug: string }) {
   const { data: historyData } = useCustomerHistory(slug, screen === "card" ? phone : "");
 
   const showToast = (t: string) => { setToast(t); setTimeout(() => setToast(""), 2200); };
+
+  // Returning customer: if this browser already found a card on this
+  // business's page before, skip straight past phone entry instead of
+  // asking again every single visit.
+  React.useEffect(() => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
+    if (!saved) {
+      setAutoChecking(false);
+      return;
+    }
+    setPhone(saved);
+    lookupMut
+      .mutateAsync(saved)
+      .then((res) => {
+        if (res.exists) setScreen("card");
+        else setScreen("signup");
+      })
+      .catch(() => {
+        localStorage.removeItem(storageKey);
+      })
+      .finally(() => setAutoChecking(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+
+  const switchNumber = () => {
+    localStorage.removeItem(storageKey);
+    setPhone("");
+    setName("");
+    setEmail("");
+    setBirthdayDate("");
+    setScreen("lookup");
+  };
 
   const milestones = biz?.milestones || [];
   const card = cardData?.card || cardData;
@@ -95,6 +133,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
     if (phone.length < 10) return;
     try {
       const res = await lookupMut.mutateAsync(phone);
+      localStorage.setItem(storageKey, phone);
       if (res.exists) {
         setScreen("card");
       } else {
@@ -107,15 +146,36 @@ export default function CustomerPage({ slug }: { slug: string }) {
 
   const handleSignup = async () => {
     try {
-      await signupMut.mutateAsync({ phone, name: name || undefined });
+      const birthday = birthdayDate ? birthdayDate.slice(5) : undefined; // "YYYY-MM-DD" -> "MM-DD"
+      await signupMut.mutateAsync({
+        phone,
+        name: biz.signupFields?.name ? name || undefined : undefined,
+        email: biz.signupFields?.email ? email || undefined : undefined,
+        birthday: biz.signupFields?.birthday ? birthday : undefined,
+      });
+      localStorage.setItem(storageKey, phone);
       setScreen("card");
     } catch (e: any) {
       showToast(e.message || "Signup failed");
     }
   };
 
-  if (bizLoading) return <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading...</div>;
-  if (!biz) return <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Business not found.</div>;
+  if (bizLoading || autoChecking) {
+    return (
+      <div className="lol-page-center">
+        <div className="lol-customer-frame" style={{ alignItems: "center", justifyContent: "center" }}>
+          <div style={{ font: "var(--type-body)", color: "var(--text-muted)" }}>Loading...</div>
+        </div>
+      </div>
+    );
+  }
+  if (!biz) {
+    return (
+      <div className="lol-page-center">
+        <div style={{ font: "var(--type-body)", color: "var(--text-muted)" }}>Business not found.</div>
+      </div>
+    );
+  }
 
   const Logo = <span style={{ font: "900 22px/1 var(--font-display)", color: "var(--ink-900)" }}>{(biz.name || "??").substring(0, 2).toUpperCase()}</span>;
 
@@ -140,26 +200,29 @@ export default function CustomerPage({ slug }: { slug: string }) {
     </div>
   );
 
+  const signupFields = biz.signupFields || {};
   const Signup = (
     <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 18, flex: 1 }}>
       <div>
         <h1 style={{ margin: 0, font: "var(--type-title)", fontSize: 42, letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>Start your card</h1>
         <p style={{ font: "var(--type-body)", color: "var(--text-muted)", marginTop: 6 }}>
-          {biz.name} asks for a name. Everything else is optional.
+          {signupFields.name ? `${biz.name} asks for a name. ` : ""}Everything else is optional.
         </p>
       </div>
-      {biz.headStart > 0 && (
+      {biz.headStart?.enabled && biz.headStart.stamps > 0 && (
         <Card tone="mint" pad={16} elevation={1}>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <Sticker color="var(--paper-000)" size={48} tilt={-6}><Icon name="gift" size={22} /></Sticker>
             <div>
-              <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>{biz.headStart} free stamps to start</div>
+              <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>{biz.headStart.stamps} free stamps to start</div>
               <div style={{ font: "var(--type-body-sm)", color: "var(--text-body)" }}>A head start from the cafe.</div>
             </div>
           </div>
         </Card>
       )}
-      <Input label="Name" icon="user" value={name} onChange={setName} placeholder="Priya" />
+      {signupFields.name && <Input label="Name" icon="user" value={name} onChange={setName} placeholder="Priya" />}
+      {signupFields.email && <Input label="Email" icon="mail" type="email" value={email} onChange={setEmail} placeholder="priya@email.com" />}
+      {signupFields.birthday && <Input label="Birthday" icon="cake" type="date" value={birthdayDate} onChange={setBirthdayDate} />}
       <Button size="lg" fullWidth onClick={handleSignup} disabled={signupMut.isPending}>
         {signupMut.isPending ? "Creating..." : "Create my card"}
       </Button>
@@ -173,7 +236,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
           <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)" }}>Your card</div>
           <div style={{ font: "var(--type-title)", fontSize: 40, letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>{card?.name || "Card"}</div>
         </div>
-        {card?.tier && <TierBadge tier={card.tier} size="sm" />}
+        {card?.tierName && <TierBadge tier={card.tierName} size="sm" />}
       </div>
       <Card pad={20}>
         <StampGrid total={totalTarget} filled={visits} milestones={milestones.map((m: any) => m.count)} glyph="coffee" columns={5} size={52} />
@@ -190,6 +253,13 @@ export default function CustomerPage({ slug }: { slug: string }) {
           <MilestoneLadder milestones={milestones.map((m: any) => ({ count: m.count, label: m.label }))} current={visits} compact />
         </div>
       )}
+      <button
+        type="button"
+        onClick={switchNumber}
+        style={{ background: "transparent", border: 0, padding: 0, cursor: "pointer", font: "600 13px/1 var(--font-body)", color: "var(--text-muted)", textDecoration: "underline", alignSelf: "center", marginTop: 4 }}
+      >
+        Not you? Use a different number
+      </button>
     </div>
   );
 
@@ -237,31 +307,33 @@ export default function CustomerPage({ slug }: { slug: string }) {
   const body = screen === "lookup" ? Lookup : screen === "signup" ? Signup : tab === "card" ? CardTab : tab === "rewards" ? RewardsTab : HistoryTab;
 
   return (
-    <div style={{ position: "relative", width: 420, height: 860, overflow: "hidden", display: "flex", flexDirection: "column", background: "var(--surface-page)", border: "var(--border)", borderRadius: "var(--radius-xl)", boxShadow: "var(--pop-3)" }}>
-      <TopBar title={biz.name} subtitle={biz.location || ""} logo={Logo} right={screen !== "lookup" ? <Badge tone="neutral" size="sm">{visits} visits</Badge> : null} tone={biz.branding?.primaryColor || "var(--grape-500)"} />
-      <div style={{ flex: 1, overflowY: "auto" }}>{body}</div>
-      {screen === "card" && tab === "card" && biz.checkInMode !== "automatic" && (
-        <div style={{ padding: "14px 20px 16px", borderTop: "var(--border)", background: "var(--paper-000)" }}>
-          <Button size="lg" fullWidth icon={<Icon name="hand" size={21} />} onClick={() => openPin("visit")} disabled={visitMut.isPending}>
-            Mark my visit
-          </Button>
-        </div>
-      )}
-      {screen === "card" && biz.checkInMode === "automatic" && (
-        <div style={{ padding: "14px 20px 16px", borderTop: "var(--border)", background: "var(--paper-000)" }}>
-          <Button size="lg" fullWidth icon={<Icon name="hand" size={21} />} onClick={async () => { try { const res = await visitMut.mutateAsync({ phone }); if (res.newlyUnlocked?.length) setCelebrate(res.newlyUnlocked[0]); else showToast(res.note || "Visit marked"); } catch (e: any) { showToast(e.message || "Failed"); } }} disabled={visitMut.isPending}>
-            Mark my visit
-          </Button>
-        </div>
-      )}
-      {screen === "card" && (
-        <BottomBar value={tab} onChange={setTab} items={[{ value: "card", label: "Card", icon: "stamp" }, { value: "rewards", label: "Rewards", icon: "gift" }, { value: "history", label: "History", icon: "history" }]} />
-      )}
-      {toast && <div style={{ position: "absolute", left: 0, right: 0, bottom: 150, display: "grid", placeItems: "center", zIndex: 30 }}><Toast tone="success">{toast}</Toast></div>}
-      <Dialog open={pinOpen} title="" onClose={() => setPinOpen(false)} width={380}>
-        <PinPad value={pin} onChange={(v) => { setPin(v); setPinError(""); }} onComplete={completePin} error={pinError} subtitle={pinMode === "visit" ? "Staff confirms your visit." : "Staff confirms the reward."} />
-      </Dialog>
-      <Celebration open={!!celebrate} title={celebrate?.label ? `${celebrate.label} unlocked!` : "Reward unlocked!"} subtitle="Show this to the counter whenever you like." onDismiss={() => { setCelebrate(null); setTab("rewards"); }} />
+    <div className="lol-page-center">
+      <div className="lol-customer-frame">
+        <TopBar title={biz.name} subtitle={biz.location || ""} logo={Logo} right={screen !== "lookup" ? <Badge tone="neutral" size="sm">{visits} visits</Badge> : null} tone={biz.branding?.primaryColor || "var(--grape-500)"} />
+        <div style={{ flex: 1, overflowY: "auto" }}>{body}</div>
+        {screen === "card" && tab === "card" && biz.checkInMode !== "automatic" && (
+          <div style={{ padding: "14px 20px 16px", borderTop: "var(--border)", background: "var(--paper-000)" }}>
+            <Button size="lg" fullWidth icon={<Icon name="hand" size={21} />} onClick={() => openPin("visit")} disabled={visitMut.isPending}>
+              Mark my visit
+            </Button>
+          </div>
+        )}
+        {screen === "card" && biz.checkInMode === "automatic" && (
+          <div style={{ padding: "14px 20px 16px", borderTop: "var(--border)", background: "var(--paper-000)" }}>
+            <Button size="lg" fullWidth icon={<Icon name="hand" size={21} />} onClick={async () => { try { const res = await visitMut.mutateAsync({ phone }); if (res.newlyUnlocked?.length) setCelebrate(res.newlyUnlocked[0]); else showToast(res.note || "Visit marked"); } catch (e: any) { showToast(e.message || "Failed"); } }} disabled={visitMut.isPending}>
+              Mark my visit
+            </Button>
+          </div>
+        )}
+        {screen === "card" && (
+          <BottomBar value={tab} onChange={setTab} items={[{ value: "card", label: "Card", icon: "stamp" }, { value: "rewards", label: "Rewards", icon: "gift" }, { value: "history", label: "History", icon: "history" }]} />
+        )}
+        {toast && <div style={{ position: "absolute", left: 0, right: 0, bottom: 150, display: "grid", placeItems: "center", zIndex: 30 }}><Toast tone="success">{toast}</Toast></div>}
+        <Dialog open={pinOpen} title="" onClose={() => setPinOpen(false)} width={380}>
+          <PinPad value={pin} onChange={(v) => { setPin(v); setPinError(""); }} onComplete={completePin} error={pinError} subtitle={pinMode === "visit" ? "Staff confirms your visit." : "Staff confirms the reward."} />
+        </Dialog>
+        <Celebration open={!!celebrate} title={celebrate?.label ? `${celebrate.label} unlocked!` : "Reward unlocked!"} subtitle="Show this to the counter whenever you like." onDismiss={() => { setCelebrate(null); setTab("rewards"); }} />
+      </div>
     </div>
   );
 }

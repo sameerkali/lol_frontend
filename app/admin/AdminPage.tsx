@@ -100,29 +100,29 @@ export default function AdminPage() {
   );
 
   const BusinessList = (
-    <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+    <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
         <div>
           <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 8 }}>Admin</div>
           <h1 style={{ margin: 0, font: "var(--type-title)", letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>Businesses</h1>
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <Input placeholder="Search..." icon="search" style={{ width: 240 }} value={search} onChange={setSearch} />
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <Input placeholder="Search..." icon="search" style={{ width: 240, maxWidth: "100%" }} value={search} onChange={setSearch} />
           <Button variant="primary" size="sm" icon={<Icon name="plus" size={16} />} onClick={() => setTab("create")}>New business</Button>
         </div>
       </div>
 
       {stats && (
-        <div style={{ display: "flex", gap: 16, marginBottom: 8 }}>
-          <Card tone="grape" pad={16} elevation={1} style={{ flex: 1 }}>
+        <div style={{ display: "flex", gap: 16, marginBottom: 8, flexWrap: "wrap" }}>
+          <Card tone="grape" pad={16} elevation={1} style={{ flex: "1 1 160px" }}>
             <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--grape-700)" }}>Businesses</div>
             <div style={{ font: "700 36px/1 var(--font-mono)", color: "var(--text-strong)", marginTop: 8 }}>{stats.totalBusinesses ?? list.length}</div>
           </Card>
-          <Card tone="mint" pad={16} elevation={1} style={{ flex: 1 }}>
+          <Card tone="mint" pad={16} elevation={1} style={{ flex: "1 1 160px" }}>
             <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--mint-700)" }}>Customers</div>
             <div style={{ font: "700 36px/1 var(--font-mono)", color: "var(--text-strong)", marginTop: 8 }}>{stats.totalCustomers ?? totalCustomers}</div>
           </Card>
-          <Card tone="sun" pad={16} elevation={1} style={{ flex: 1 }}>
+          <Card tone="sun" pad={16} elevation={1} style={{ flex: "1 1 160px" }}>
             <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--sun-700)" }}>Visits</div>
             <div style={{ font: "700 36px/1 var(--font-mono)", color: "var(--text-strong)", marginTop: 8 }}>{stats.totalVisits ?? "—"}</div>
           </Card>
@@ -130,8 +130,9 @@ export default function AdminPage() {
       )}
 
       {bizLoading ? <TableSkeleton rows={6} columns={4} /> : (
-        <Card pad={0} elevation={1}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr", padding: "14px 20px", borderBottom: "var(--border)", background: "var(--paper-200)" }}>
+        <Card pad={0} elevation={1} style={{ overflow: "hidden" }}>
+        <div className="lol-table-scroll">
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr", padding: "14px 20px", borderBottom: "var(--border)", background: "var(--paper-200)", minWidth: 640 }}>
             {["Business", "Plan", "Customers", "Status", "Actions"].map((h) => (
               <span key={h} style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)" }}>{h}</span>
             ))}
@@ -140,7 +141,7 @@ export default function AdminPage() {
             <div
               key={b._id || b.id || i}
               onClick={() => router.push(`/admin/businesses/${b._id || b.id}`)}
-              style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr", padding: "16px 20px", borderBottom: i < list.length - 1 ? "var(--border-hair)" : "none", alignItems: "center", cursor: "pointer" }}
+              style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr", padding: "16px 20px", borderBottom: i < list.length - 1 ? "var(--border-hair)" : "none", alignItems: "center", cursor: "pointer", minWidth: 640 }}
             >
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <span style={{ width: 34, height: 34, display: "grid", placeItems: "center", background: "var(--grape-100)", border: "var(--border-hair)", borderRadius: "50%", font: "700 13px/1 var(--font-body)", color: "var(--grape-700)" }}>
@@ -160,13 +161,14 @@ export default function AdminPage() {
             </div>
           ))}
           {list.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>No businesses yet.</div>}
+        </div>
         </Card>
       )}
     </div>
   );
 
   const CreateBusiness = (
-    <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28, maxWidth: 640 }}>
+    <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28, maxWidth: 640 }}>
       <div>
         <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 8 }}>Admin</div>
         <h1 style={{ margin: 0, font: "var(--type-title)", letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>Create business</h1>
@@ -183,7 +185,7 @@ export default function AdminPage() {
           />
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <label style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)" }}>Template</label>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {templates.map((t) => (
                 <button key={t.key} title={t.description} onClick={() => setNewTemplate(t.key)} style={{ padding: "10px 20px", borderRadius: "var(--radius-pill)", border: newTemplate === t.key ? "var(--border)" : "3px solid transparent", background: newTemplate === t.key ? "var(--grape-100)" : "var(--paper-000)", font: "var(--type-button)", color: newTemplate === t.key ? "var(--grape-700)" : "var(--text-muted)", cursor: "pointer" }}>{t.label}</button>
               ))}
@@ -229,9 +231,9 @@ export default function AdminPage() {
   );
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: "var(--surface-page)" }}>
+    <div className="lol-app-shell" style={{ display: "flex", height: "100vh", background: "var(--surface-page)" }}>
       {Sidebar}
-      <main style={{ flex: 1, overflowY: "auto", maxWidth: "var(--width-panel)" }}>
+      <main className="lol-app-main" style={{ flex: 1, overflowY: "auto", maxWidth: "var(--width-panel)" }}>
         {tab === "businesses" ? BusinessList : CreateBusiness}
       </main>
       <Dialog

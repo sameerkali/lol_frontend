@@ -156,6 +156,72 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* ---------------------------------------------------------------------
+   Responsive layout utilities. Inline styles win over classes on shared
+   properties, so every property a breakpoint needs to change lives here
+   instead of in the component's style object — never both, or the class
+   is dead weight. `!important` is deliberate: it's the only way to win
+   against an element's own inline style from a media query.
+   --------------------------------------------------------------------- */
+
+/* Customer card: a centered "phone" mockup on desktop, full-bleed real
+   viewport on an actual phone. */
+.lol-page-center {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-page);
+  padding: 24px;
+}
+.lol-customer-frame {
+  position: relative;
+  width: 420px;
+  height: 860px;
+  max-height: 92vh;
+  max-height: 92dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-page);
+  border: var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--pop-3);
+}
+@media (max-width: 480px) {
+  .lol-page-center { padding: 0; }
+  .lol-customer-frame {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* Admin/business panel shell: sidebar-beside-content on desktop, stacked
+   with the sidebar collapsed into a top bar on mobile. */
+@media (max-width: 780px) {
+  .lol-app-shell { flex-direction: column !important; height: auto !important; min-height: 100vh; min-height: 100dvh; }
+  .lol-app-main { max-width: 100% !important; overflow-y: visible !important; }
+  .lol-page-pad { padding: 16px !important; }
+  .lol-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .lol-sidenav-desktop { display: none !important; }
+  .lol-sidenav-mobile { display: flex !important; }
+  .lol-hide-mobile { display: none !important; }
+  .lol-stack-mobile { flex-direction: column !important; align-items: stretch !important; }
+}
+@media (min-width: 781px) {
+  .lol-sidenav-mobile { display: none !important; }
+}
+
+/* Any data table wrapped this way scrolls horizontally instead of
+   squeezing columns unreadably thin on a narrow screen. */
+.lol-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
 body {
   margin: 0;
   background: var(--surface-page);

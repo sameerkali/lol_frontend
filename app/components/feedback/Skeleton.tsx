@@ -19,9 +19,9 @@ export function Skeleton({
         height,
         borderRadius: radius,
         flex: "0 0 auto",
-        background: "linear-gradient(100deg, var(--paper-200) 30%, var(--paper-000) 50%, var(--paper-200) 70%)",
+        background: "linear-gradient(100deg, var(--paper-200) 35%, var(--paper-050) 50%, var(--paper-200) 65%)",
         backgroundSize: "300% 100%",
-        animation: "lol-shine 1.6s ease-in-out infinite",
+        animation: "lol-shine 3s linear infinite",
         ...style,
       }}
     />
@@ -58,15 +58,19 @@ export function SkeletonStatRow({ count = 4 }: { count?: number }) {
 
 /** Full-page loading gate shaped like the sidebar + content panel layout, shown while auth/session resolves so the first paint is never a blank screen. */
 export function PanelSkeleton({ navItems = 4 }: { navItems?: number }) {
+  const navShine = { background: "linear-gradient(100deg, var(--ink-700) 30%, var(--ink-500) 50%, var(--ink-700) 70%)", backgroundSize: "300% 100%" };
   return (
-    <div style={{ display: "flex", height: "100vh", background: "var(--surface-page)" }}>
-      <div style={{ width: 240, flex: "0 0 auto", padding: 20, background: "var(--ink-900)", display: "flex", flexDirection: "column", gap: 10 }}>
-        <Skeleton width={90} height={36} radius={8} style={{ background: "linear-gradient(100deg, var(--ink-700) 30%, var(--ink-500) 50%, var(--ink-700) 70%)", backgroundSize: "300% 100%", marginBottom: 20 }} />
+    <div className="lol-app-shell" style={{ display: "flex", height: "100vh", background: "var(--surface-page)" }}>
+      <div className="lol-sidenav-desktop" style={{ width: 240, flex: "0 0 auto", padding: 20, background: "var(--ink-900)", display: "flex", flexDirection: "column", gap: 10 }}>
+        <Skeleton width={90} height={36} radius={8} style={{ ...navShine, marginBottom: 20 }} />
         {Array.from({ length: navItems }).map((_, i) => (
-          <Skeleton key={i} height={48} radius="var(--radius-pill)" style={{ background: "linear-gradient(100deg, var(--ink-700) 30%, var(--ink-500) 50%, var(--ink-700) 70%)", backgroundSize: "300% 100%" }} />
+          <Skeleton key={i} height={48} radius="var(--radius-pill)" style={navShine} />
         ))}
       </div>
-      <div style={{ flex: 1, padding: 32, display: "flex", flexDirection: "column", gap: 28, maxWidth: "var(--width-panel)" }}>
+      <div className="lol-sidenav-mobile" style={{ padding: 12, background: "var(--ink-900)", minHeight: 56, boxSizing: "border-box", alignItems: "center" }}>
+        <Skeleton width={70} height={28} radius={6} style={navShine} />
+      </div>
+      <div className="lol-app-main lol-page-pad" style={{ flex: 1, padding: 32, display: "flex", flexDirection: "column", gap: 28, maxWidth: "var(--width-panel)" }}>
         <Skeleton width={160} height={12} />
         <Skeleton width={280} height={34} />
         <SkeletonStatRow />
