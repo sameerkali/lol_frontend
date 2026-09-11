@@ -50,7 +50,7 @@ const SETTINGS_TABS = [
 
 function SectionHeader({ eyebrow, title, action }: { eyebrow: string; title: string; action?: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
       <div>
         <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 8 }}>
           {eyebrow}
@@ -177,10 +177,10 @@ export default function BusinessPanel() {
 
   /* ---------- Dashboard ---------- */
   const Dashboard = (
-    <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28 }}>
+    <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28 }}>
       <SectionHeader eyebrow="Dashboard" title={b.name || "..."} />
       {dash ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+        <div className="lol-stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
           <StatTile label="Total customers" value={dash.totalCustomers ?? list.length} icon="users" tone="grape" />
           <StatTile label="Visits (30d)" value={dash.visits ?? 0} icon="stamp" tone="mint" />
           <StatTile label="Redemptions (30d)" value={dash.redemptions ?? 0} icon="gift" tone="sun" />
@@ -264,7 +264,7 @@ export default function BusinessPanel() {
 
   /* ---------- Milestones ---------- */
   const Milestones = (
-    <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28 }}>
+    <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28 }}>
       <SectionHeader eyebrow="Milestones" title="Reward ladder" />
       {meLoading ? (
         <Skeleton height={320} radius="var(--radius-lg)" />
@@ -276,7 +276,7 @@ export default function BusinessPanel() {
 
   /* ---------- Customers ---------- */
   const Customers = (
-    <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 20 }}>
+    <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 20 }}>
       <SectionHeader
         eyebrow="Customers"
         title="All customers"
@@ -312,14 +312,15 @@ export default function BusinessPanel() {
         </label>
       </div>
       {custLoading ? <TableSkeleton rows={6} columns={5} /> : (
-        <Card pad={0} elevation={1}>
-          <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.3fr 0.8fr 0.8fr 1fr 1fr", padding: "14px 20px", borderBottom: "var(--border)", background: "var(--paper-200)" }}>
+        <Card pad={0} elevation={1} style={{ overflow: "hidden" }}>
+        <div className="lol-table-scroll">
+          <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.3fr 0.8fr 0.8fr 1fr 1fr", padding: "14px 20px", borderBottom: "var(--border)", background: "var(--paper-200)", minWidth: 680 }}>
             {["Name", "Phone", "Visits", "Points", "Tier", "Last visit"].map((h) => (
               <span key={h} style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)" }}>{h}</span>
             ))}
           </div>
           {list.map((c: any, i: number) => (
-            <div key={c._id || i} style={{ display: "grid", gridTemplateColumns: "1.8fr 1.3fr 0.8fr 0.8fr 1fr 1fr", padding: "16px 20px", borderBottom: i < list.length - 1 ? "var(--border-hair)" : "none", alignItems: "center" }}>
+            <div key={c._id || i} style={{ display: "grid", gridTemplateColumns: "1.8fr 1.3fr 0.8fr 0.8fr 1fr 1fr", padding: "16px 20px", borderBottom: i < list.length - 1 ? "var(--border-hair)" : "none", alignItems: "center", minWidth: 680 }}>
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <span style={{ width: 34, height: 34, display: "grid", placeItems: "center", background: "var(--grape-100)", border: "var(--border-hair)", borderRadius: "50%", font: "700 13px/1 var(--font-body)", color: "var(--grape-700)" }}>
                   {(c.name || c.phone || "?").charAt(0)}
@@ -334,6 +335,7 @@ export default function BusinessPanel() {
             </div>
           ))}
           {list.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>No customers yet. Put the tag on the counter.</div>}
+        </div>
         </Card>
       )}
     </div>
@@ -341,7 +343,7 @@ export default function BusinessPanel() {
 
   /* ---------- Settings ---------- */
   const Settings = (
-    <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28 }}>
+    <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28 }}>
       <SectionHeader eyebrow="Settings" title="Business settings" />
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         {SETTINGS_TABS.map((s) => (
@@ -394,7 +396,7 @@ export default function BusinessPanel() {
 
   /* ---------- QR ---------- */
   const QrCode = (
-    <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28, maxWidth: 560 }}>
+    <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28, maxWidth: 560 }}>
       <SectionHeader eyebrow="QR Code" title="Scan to get stamps" />
       {qr?.qrCodeDataUrl ? (
         <>
@@ -442,9 +444,9 @@ export default function BusinessPanel() {
   const content = tab === "dashboard" ? Dashboard : tab === "milestones" ? Milestones : tab === "customers" ? Customers : tab === "qr" ? QrCode : Settings;
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: "var(--surface-page)" }}>
+    <div className="lol-app-shell" style={{ display: "flex", height: "100vh", background: "var(--surface-page)" }}>
       {Sidebar}
-      <main style={{ flex: 1, overflowY: "auto", maxWidth: "var(--width-panel)" }}>{content}</main>
+      <main className="lol-app-main" style={{ flex: 1, overflowY: "auto", maxWidth: "var(--width-panel)" }}>{content}</main>
 
       <Dialog
         open={showLogoutConfirm}

@@ -89,6 +89,8 @@ export function SideNav({ items = [], value, onChange, brand = "lol", footer, st
       <nav className="lol-sidenav-mobile" style={{ flexDirection: "column", position: "relative", zIndex: 50 }}>
         <div
           style={{
+            position: "relative",
+            zIndex: 51,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",

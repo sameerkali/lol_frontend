@@ -38,7 +38,7 @@ export function Input({
   const inputType = isPassword && reveal ? "text" : type;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, ...style }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0, ...style }}>
       {label ? (
         <label
           htmlFor={rid}

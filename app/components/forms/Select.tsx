@@ -33,7 +33,7 @@ export function Select({
   const hintId = `${rid}-hint`;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, ...style }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0, ...style }}>
       {label ? (
         <label
           htmlFor={rid}

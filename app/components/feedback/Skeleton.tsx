@@ -45,7 +45,7 @@ export function SkeletonRow({ columns = 4 }: { columns?: number }) {
 
 export function SkeletonStatRow({ count = 4 }: { count?: number }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `repeat(${count}, 1fr)`, gap: 16 }}>
+    <div className="lol-stat-grid" style={{ display: "grid", gridTemplateColumns: `repeat(${count}, 1fr)`, gap: 16 }}>
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} style={{ background: "var(--paper-000)", border: "var(--border)", borderRadius: "var(--radius-lg)", boxShadow: "var(--pop-1)", padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
           <Skeleton width="60%" height={11} />

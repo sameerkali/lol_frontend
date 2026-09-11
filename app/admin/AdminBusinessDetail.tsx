@@ -120,7 +120,7 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--surface-page)" }}>
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: 32, display: "flex", flexDirection: "column", gap: 24 }}>
+      <div className="lol-page-pad" style={{ maxWidth: 960, margin: "0 auto", padding: 32, display: "flex", flexDirection: "column", gap: 24 }}>
         <button
           onClick={() => router.push("/admin")}
           style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "transparent", border: 0, cursor: "pointer", color: "var(--text-muted)", font: "600 14px/1 var(--font-body)", padding: 0, width: "fit-content" }}
