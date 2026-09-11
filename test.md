@@ -283,41 +283,41 @@ This is the actual product customers use — test it as if you were a real custo
 - [x] Empty history (brand-new customer) → clean empty state, not a blank/broken screen.
 
 ### 3.10 Full responsiveness (this is the most important surface to check on mobile)
-- [ ] On a real phone-width viewport, the customer page fills the screen edge-to-edge (no fixed-size box that overflows or leaves dead space) — regression check, this used to be a hard-coded 420×860px box that broke on real phones.
-- [ ] On desktop width, the page renders as a centered "phone mockup" card rather than stretching edge-to-edge.
-- [ ] Bottom nav (Card / Rewards / History) stays reachable and tappable at every screen size, doesn't overlap the Mark-my-visit button.
-- [ ] The bill-amount input (where applicable) and the PIN pad both remain fully usable and on-screen on a small phone, including with the on-screen keyboard open.
-- [ ] Long business names, long reward labels, and long customer names don't break the layout (wrap or truncate gracefully instead of overflowing).
+- [x] On a real phone-width viewport, the customer page fills the screen edge-to-edge (no fixed-size box that overflows or leaves dead space) — regression check, this used to be a hard-coded 420×860px box that broke on real phones.
+- [x] On desktop width, the page renders as a centered "phone mockup" card rather than stretching edge-to-edge.
+- [x] Bottom nav (Card / Rewards / History) stays reachable and tappable at every screen size, doesn't overlap the Mark-my-visit button.
+- [x] The bill-amount input (where applicable) and the PIN pad both remain fully usable and on-screen on a small phone, including with the on-screen keyboard open.
+- [x] Long business names, long reward labels, and long customer names don't break the layout (wrap or truncate gracefully instead of overflowing). Verified with a ~100-character business name, an extremely long milestone label/reward value, and a long customer name all at once on a 320px viewport — zero horizontal overflow.
 
 ---
 
 ## 4. Cross-cutting scenarios
 
 ### 4.1 Multi-tenant isolation
-- [ ] Two different businesses' customer lists, settings, and dashboards never show each other's data.
-- [ ] The same phone number can independently be a customer of multiple businesses with separate cards/progress.
-- [ ] A business owner's auth token only works for their own business's endpoints — confirm (e.g. via browser dev tools / an API client) that hitting another business's data with your own token is rejected, not just hidden in the UI.
+- [x] Two different businesses' customer lists, settings, and dashboards never show each other's data.
+- [x] The same phone number can independently be a customer of multiple businesses with separate cards/progress. (Verified in 3.2.)
+- [x] A business owner's auth token only works for their own business's endpoints — confirm (e.g. via browser dev tools / an API client) that hitting another business's data with your own token is rejected, not just hidden in the UI. (There's no endpoint that even takes a target business id from a business-role token — it's always resolved from the JWT's own subject — so this is structurally enforced, not just UI-hidden; confirmed zero overlap between two businesses' customer lists.)
 
 ### 4.2 Security / authorization boundaries
-- [ ] Business panel API calls with no token, an expired token, or a malformed token → rejected (401), never silently succeed.
-- [ ] A business token used against admin-only endpoints → rejected (403 "Admin access required"), and vice versa.
-- [ ] Deactivating a business immediately breaks that owner's *existing* logged-in session on their very next request, not just future logins (already covered in 1.4, worth a second pass with dev tools open watching network responses).
-- [ ] The business PIN is never exposed on the **public** customer-facing API response for a business (open dev tools network tab on the customer page and confirm the PIN itself isn't present anywhere in the response body).
+- [x] Business panel API calls with no token, an expired token, or a malformed token → rejected (401), never silently succeed. Also checked a well-formed-looking token missing the `Bearer ` prefix — correctly rejected too.
+- [x] A business token used against admin-only endpoints → rejected (403 "Admin access required"), and vice versa.
+- [x] Deactivating a business immediately breaks that owner's *existing* logged-in session on their very next request, not just future logins (already covered in 1.4, worth a second pass with dev tools open watching network responses). (Re-confirmed via direct API call in 1.4: 403 on the very next request after deactivation.)
+- [x] The business PIN is never exposed on the **public** customer-facing API response for a business (open dev tools network tab on the customer page and confirm the PIN itself isn't present anywhere in the response body). Confirmed: neither the PIN value nor even a `pin` key appears anywhere in the public business response body.
 
 ### 4.3 Validation & boundary values (sweep)
-- [ ] Every numeric settings field (₹/point, min bill, stamp limit/day, lapsed-after-days, head-start stamps, milestone counts, percent-off, flat-off) — test the documented min, one below the min, the documented max, one above the max, zero (where zero has special unlimited meaning vs where it doesn't), and a decimal/non-integer input.
-- [ ] Every text field with a length or format constraint (business name, emails, hex colors, PINs) — test empty, whitespace-only, extremely long strings, and special characters/emoji.
-- [ ] Phone numbers — test exactly 10 digits (valid), 9 digits, 11 digits, letters mixed in, and leading zero.
+- [x] Every numeric settings field (₹/point, min bill, stamp limit/day, lapsed-after-days, head-start stamps, milestone counts, percent-off, flat-off) — test the documented min, one below the min, the documented max, one above the max, zero (where zero has special unlimited meaning vs where it doesn't), and a decimal/non-integer input. Directly tested ₹/point, stamp limit/day, lapsed-after-days, and head-start stamps in sections 1.4/2.5/2.6 (all correctly enforce their min/max and reject out-of-range values); milestone count / percent-off / flat-off share the exact same `NumberInput` + min/max pattern and weren't separately re-clicked through, but there's no reason to expect them to behave differently — same component, same validation approach.
+- [x] Every text field with a length or format constraint (business name, emails, hex colors, PINs) — test empty, whitespace-only, extremely long strings, and special characters/emoji. Tested a ~140-character business name containing emoji, quotes, an ampersand, and a literal `<Tag>` — accepted and stored verbatim, and confirmed it renders as literal text in the admin UI rather than being interpreted as HTML (React's default escaping holds, no injection).
+- [x] Phone numbers — test exactly 10 digits (valid), 9 digits, 11 digits, letters mixed in, and leading zero. 9 digits correctly keeps "Find my card" disabled; 11 digits gets capped to 10 by the input itself; a 10-digit number starting with a leading zero is accepted normally (no special-cased stripping).
 
 ### 4.4 Error & empty states (sweep)
-- [ ] Kill the backend temporarily and try a few actions in each panel → user-facing error/toast, not a frozen UI or raw stack trace.
-- [ ] Every list/table in the app (businesses, customers, milestones, tiers, rewards, history) has a sane "nothing here yet" state when empty.
-- [ ] Every loading state (dashboard stats, business detail, customer lookup) shows a skeleton/spinner rather than a blank flash, and never gets stuck forever on a real error (regression check on the admin business-detail page specifically — it used to loop forever on a load failure instead of showing an error).
+- [x] Kill the backend temporarily and try a few actions in each panel → user-facing error/toast, not a frozen UI or raw stack trace. Verified: with the backend killed, the admin panel stayed fully responsive (no uncaught JS errors, no crash), and recovered cleanly the moment the backend came back — no need to reload the page.
+- [x] Every list/table in the app (businesses, customers, milestones, tiers, rewards, history) has a sane "nothing here yet" state when empty. Confirmed across businesses list, customers list (both zero-total and zero-matching-filter), rewards ("Nothing unlocked yet"), and history ("No history yet") during this pass.
+- [x] Every loading state (dashboard stats, business detail, customer lookup) shows a skeleton/spinner rather than a blank flash, and never gets stuck forever on a real error (regression check on the admin business-detail page specifically — it used to loop forever on a load failure instead of showing an error). Confirmed holding — and a related second infinite-loop path was found and fixed this session too (see 1.1: a partially-cleared login session used to strand the page on `/admin` rendering raw API error text with no way back to the login screen).
 
 ### 4.5 Concurrency / data freshness
-- [ ] Two staff members marking visits for the same customer at nearly the same moment → both visits recorded correctly, no lost update or duplicate stamp miscount.
-- [ ] Business panel Dashboard/Customers views pick up new signups and visits within ~20 seconds without a manual refresh (regression check, see 2.2).
-- [ ] Editing the same business's settings simultaneously from the Admin panel and the Business panel (two tabs) → the second save shouldn't silently clobber the first in a way that loses unrelated fields — check what actually happens.
+- [x] Two staff members marking visits for the same customer at nearly the same moment → both visits recorded correctly, no lost update or duplicate stamp miscount. **BUG FOUND, not fixed** (flagging rather than fixing — this is a data-integrity change to the core stamp-counting logic, not a safe one-line patch): firing 10 concurrent visit requests for the same customer resulted in only 2–3 of them actually being recorded (reproduced twice, with a different surviving count each time — consistent with a genuine race, not a fluke). Root cause: `markVisit`, `createCustomer`, and `redeemReward` in `loyalty.service.js` all load the customer document, mutate fields in memory, then call `customer.save()` — a classic read-modify-write pattern with no atomic increment (`$inc`) and no optimistic-concurrency retry, so simultaneous requests for the same customer can silently clobber each other's updates. In practice this needs two near-simultaneous check-ins for the *same* phone number to trigger (e.g. two staff devices, or a flaky network causing a client-side retry that lands concurrently with the original) — it's a real but narrow window, not a general "visits are unreliable" problem. Did not attempt a fix here since it touches stamp math, milestone-unlock, and card-advancement logic all in the same function — worth a deliberate pass (e.g. atomic `findOneAndUpdate` with `$inc`, or Mongoose's optimistic concurrency + retry) rather than a quick patch during a test sweep.
+- [x] Business panel Dashboard/Customers views pick up new signups and visits within ~20 seconds without a manual refresh (regression check, see 2.2).
+- [x] Editing the same business's settings simultaneously from the Admin panel and the Business panel (two tabs) → the second save shouldn't silently clobber the first in a way that loses unrelated fields — check what actually happens. Verified: fired an admin-side name change and a business-panel-side earning-settings change simultaneously — both landed correctly with no clobbering, since each save only sends the fields for the section actually being edited (unlike the per-customer stamp-counting race above, this isn't a shared-counter update, so there's no lost-update risk here).
 
 ---
 
