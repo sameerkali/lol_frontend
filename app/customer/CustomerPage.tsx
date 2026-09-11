@@ -101,7 +101,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
   const visits = card?.count || 0;
   const totalTarget = milestones.length ? milestones[milestones.length - 1].count : 15;
   const nextMs = milestones.find((m: any) => m.count > visits) || milestones[milestones.length - 1] || { count: totalTarget, label: "Reward" };
-  const unlocked = card?.milestonesUnlocked || [];
+  const unlocked = card?.availableRewards || [];
   const needsBillAmount = biz?.earningMode === "bill_amount" || (biz?.earningMode === "visits_with_min_bill" && biz?.billAmountFieldEnabled);
   const billAmountValid = !needsBillAmount || (billAmount !== "" && billAmount > 0);
 
