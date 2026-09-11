@@ -21,29 +21,29 @@ A full functional test pass across the three surfaces of the app: **Admin panel*
 ## 1. Admin Panel
 
 ### 1.1 Login & session
-- [ ] Log in with correct admin credentials → lands on `/admin` (Businesses list).
-- [ ] Log in with wrong password → clear error shown, not a silent failure or crash.
-- [ ] Log in with an email that doesn't exist → same generic "invalid email or password" error (shouldn't reveal whether the email exists).
-- [ ] Leave email or password blank and submit → inline validation error, no network call.
-- [ ] Enter a malformed email (`notanemail`) → inline validation catches it before submit.
-- [ ] Refresh the page while logged in → stays logged in (session persists).
-- [ ] Open `/admin` directly in a fresh tab with no prior login → redirected to `/admin/login`.
-- [ ] Manually edit/clear the stored auth token (localStorage) then navigate → treated as logged out.
-- [ ] Log out via the sidebar → confirmation dialog appears (title "Log out?") before actually logging out; **Cancel** keeps you logged in; **Log out** signs out and redirects to `/admin/login`.
-- [ ] **Mobile**: open the hamburger drawer, tap Logout → the drawer closes and the confirmation dialog is fully visible and clickable (not obscured by the drawer or backdrop).
+- [x] Log in with correct admin credentials → lands on `/admin` (Businesses list).
+- [x] Log in with wrong password → clear error shown, not a silent failure or crash.
+- [x] Log in with an email that doesn't exist → same generic "invalid email or password" error (shouldn't reveal whether the email exists).
+- [x] Leave email or password blank and submit → inline validation error, no network call. (Button is disabled outright while either field is empty — stronger than inline validation, confirmed no request fires.)
+- [x] Enter a malformed email (`notanemail`) → inline validation catches it before submit.
+- [x] Refresh the page while logged in → stays logged in (session persists).
+- [x] Open `/admin` directly in a fresh tab with no prior login → redirected to `/admin/login`.
+- [x] Manually edit/clear the stored auth token (localStorage) then navigate → treated as logged out. **BUG FOUND & FIXED**: clearing only `localStorage.token` (leaving the `role` key and the `lol_session` cookie behind — e.g. a browser tool that clears storage but not cookies) left the page stuck at `/admin` rendering raw `"Missing bearer token"` API error text, with no way to reach the login form: the middleware's optimistic cookie gate kept bouncing `/admin/login` back to `/admin`. Fixed in `app/lib/auth.tsx` — a partial/invalid local session now clears the leftover `role` key and `lol_session` cookie too, so the redirect actually lands on the login page. Re-verified after the fix: redirects correctly.
+- [x] Log out via the sidebar → confirmation dialog appears (title "Log out?") before actually logging out; **Cancel** keeps you logged in; **Log out** signs out and redirects to `/admin/login`.
+- [x] **Mobile**: open the hamburger drawer, tap Logout → the drawer closes and the confirmation dialog is fully visible and clickable (not obscured by the drawer or backdrop).
 
 ### 1.2 Businesses list
-- [ ] List loads and shows all existing businesses with name, plan, customer count, status.
-- [ ] Top stat cards (Businesses / Customers / Visits) show sensible non-negative numbers.
-- [ ] Search by business name → list filters live.
-- [ ] Search by slug → matches.
-- [ ] Search by owner email → matches.
-- [ ] Search with no matches → "No businesses yet" (or equivalent empty state), not a blank screen or error.
-- [ ] Clear the search → full list returns.
-- [ ] Click a business row → navigates to that business's detail page.
-- [ ] Click "Open" button on a row → same destination as clicking the row.
-- [ ] Click the row's delete (trash) icon → native confirm() prompt appears; Cancel does nothing; Confirm deletes the business and removes it from the list without a full page reload.
-- [ ] **Mobile**: table scrolls horizontally without breaking page layout; stat cards wrap instead of overflowing.
+- [x] List loads and shows all existing businesses with name, plan, customer count, status.
+- [x] Top stat cards (Businesses / Customers / Visits) show sensible non-negative numbers.
+- [x] Search by business name → list filters live.
+- [x] Search by slug → matches.
+- [x] Search by owner email → matches.
+- [x] Search with no matches → "No businesses yet" (or equivalent empty state), not a blank screen or error.
+- [x] Clear the search → full list returns.
+- [x] Click a business row → navigates to that business's detail page.
+- [x] Click "Open" button on a row → same destination as clicking the row.
+- [x] Click the row's delete (trash) icon → native confirm() prompt appears; Cancel does nothing; Confirm deletes the business and removes it from the list without a full page reload.
+- [x] **Mobile**: table scrolls horizontally without breaking page layout; stat cards wrap instead of overflowing. (320px viewport, zero horizontal overflow.)
 
 ### 1.3 Create business
 - [ ] Navigate via "New business" button → goes straight to the Create business form (no intermediate dialog).

@@ -43,7 +43,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role") as Role | null;
-    if (!token || !role) { setLoading(false); return; }
+    if (!token || !role) {
+      // Partial/stale local session (e.g. only one of the two keys got
+      // cleared) must not leave the "lol_session" cookie behind — proxy.ts's
+      // optimistic gate trusts that cookie alone, so a leftover cookie with
+      // no matching token bounces the user between /admin and /admin/login
+      // forever instead of ever reaching the login form.
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      clearSessionCookie();
+      setLoading(false);
+      return;
+    }
 
     const path = role === "admin" ? "/admin/auth/me" : "/business/me";
     api.get<any>(path)
