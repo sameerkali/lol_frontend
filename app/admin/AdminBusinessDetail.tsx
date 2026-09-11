@@ -17,7 +17,6 @@ import { Icon } from "../components/core/Icon";
 import { Input } from "../components/forms/Input";
 import { Select } from "../components/forms/Select";
 import { Dialog } from "../components/feedback/Dialog";
-import { api } from "../lib/api";
 import {
   EarningSection,
   MilestonesSection,
@@ -61,7 +60,7 @@ function OwnerAccountSection({ business, onSave, saving }: { business: any; onSa
         <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Owner login</div>
         <Input label="Owner email" value={business.owner?.email || ""} disabled onChange={() => {}} />
         <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>
-          Admin override: reset the owner's password directly, no current password required.
+          Admin override: reset the owner&apos;s password directly, no current password required.
         </div>
         <Input label="New password" type="password" value={newPassword} onChange={setNewPassword} hint="At least 8 characters." />
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -196,9 +195,24 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
                     <>
                       <img src={qr.qrCodeDataUrl} alt="QR Code" style={{ width: 200, height: 200 }} />
                       <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", wordBreak: "break-all" }}>{qr.link}</div>
-                      <Button variant="secondary" size="sm" icon={<Icon name="copy" size={16} />} onClick={() => navigator.clipboard?.writeText(qr.link)}>
-                        Copy link
-                      </Button>
+                      <div style={{ display: "flex", gap: 12 }}>
+                        <Button variant="secondary" size="sm" icon={<Icon name="copy" size={16} />} onClick={() => navigator.clipboard?.writeText(qr.link)}>
+                          Copy link
+                        </Button>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          icon={<Icon name="download" size={16} />}
+                          onClick={() => {
+                            const a = document.createElement("a");
+                            a.href = qr.qrCodeDataUrl;
+                            a.download = `${business.slug || "loyalty"}-qr.png`;
+                            a.click();
+                          }}
+                        >
+                          Download PNG
+                        </Button>
+                      </div>
                     </>
                   ) : (
                     <div style={{ color: "var(--text-muted)" }}>Loading...</div>

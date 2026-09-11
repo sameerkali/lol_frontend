@@ -28,7 +28,6 @@ export default function AdminPage() {
   const router = useRouter();
   const { user, logout, loading: authLoading } = useAuth();
   const [tab, setTab] = React.useState("businesses");
-  const [showCreate, setShowCreate] = React.useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
@@ -63,7 +62,6 @@ export default function AdminPage() {
 
     try {
       await createMut.mutateAsync({ name: newName, template: newTemplate, ownerEmail: newEmail.trim(), ownerPassword: newPass, pin: newPin || undefined });
-      setShowCreate(false);
       setNewName(""); setNewEmail(""); setNewPass(""); setNewPin("");
       setCreateFieldErrors({});
       setTab("businesses");
@@ -109,7 +107,7 @@ export default function AdminPage() {
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           <Input placeholder="Search..." icon="search" style={{ width: 240 }} value={search} onChange={setSearch} />
-          <Button variant="primary" size="sm" icon={<Icon name="plus" size={16} />} onClick={() => setShowCreate(true)}>New business</Button>
+          <Button variant="primary" size="sm" icon={<Icon name="plus" size={16} />} onClick={() => setTab("create")}>New business</Button>
         </div>
       </div>
 
@@ -235,17 +233,6 @@ export default function AdminPage() {
       <main style={{ flex: 1, overflowY: "auto", maxWidth: "var(--width-panel)" }}>
         {tab === "businesses" ? BusinessList : CreateBusiness}
       </main>
-      <Dialog open={showCreate} title="Create new business" onClose={() => setShowCreate(false)} width={480}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <Input label="Business name" placeholder="e.g. Kaapi House" value={newName} onChange={setNewName} />
-          <Input label="Owner email" placeholder="owner@business.com" value={newEmail} onChange={setNewEmail} />
-          <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-            <Button variant="primary" size="sm" onClick={() => { setShowCreate(false); setTab("create"); }}>Continue</Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}>Cancel</Button>
-          </div>
-        </div>
-      </Dialog>
-
       <Dialog
         open={showLogoutConfirm}
         title="Log out?"
@@ -258,7 +245,7 @@ export default function AdminPage() {
           </>
         }
       >
-        You'll need to sign in again to access the admin panel.
+        You&apos;ll need to sign in again to access the admin panel.
       </Dialog>
     </div>
   );

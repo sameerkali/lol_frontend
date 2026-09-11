@@ -132,7 +132,6 @@ export default function BusinessPanel() {
   if (authLoading || !user) return null;
 
   const b = me || {};
-  const milestones = b.milestones || [];
   const customers = custData?.customers || custData || [];
   const list = Array.isArray(customers) ? customers : [];
 
@@ -421,7 +420,7 @@ export default function BusinessPanel() {
           </>
         }
       >
-        You'll need to sign in again to manage {b.name || "your business"}.
+        You&apos;ll need to sign in again to manage {b.name || "your business"}.
       </Dialog>
     </div>
   );

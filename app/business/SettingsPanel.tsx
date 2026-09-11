@@ -521,7 +521,7 @@ export function PinSection({
       <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 480 }}>
         <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Business PIN</div>
         <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>
-          Used by staff to confirm visits (if PIN check-in is on) and to redeem rewards. Shown here so it's always at hand.
+          Used by staff to confirm visits (if PIN check-in is on) and to redeem rewards. Shown here so it&apos;s always at hand.
         </div>
 
         <div
