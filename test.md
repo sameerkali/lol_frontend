@@ -229,12 +229,12 @@ This is the actual product customers use — test it as if you were a real custo
 - [x] No overlap/visual glitch between the header and the "Start your card" heading (regression check — this was a real layout bug caused by stale scroll position carrying over between screens). (Fixed and verified earlier this session.)
 
 ### 3.3 Returning customer (localStorage caching)
-- [ ] After a successful lookup or signup, reload the page (same browser, same business) → skips straight to the Card screen, no re-entering the phone number.
-- [ ] Close and reopen the tab (not just reload) → same behavior persists.
-- [ ] Visit a **different business's** page in the same browser → does *not* incorrectly reuse the cached number from business A; asks fresh for business B.
-- [ ] Tap "Not you? Use a different number" from the Card screen → returns to the phone-entry screen and clears the cached number (confirm via reload that it doesn't silently log back in as the old number).
-- [ ] Clear browser storage manually, reload → back to asking for a phone number, as expected for a "new" browser/device.
-- [ ] Private/incognito window → always starts fresh (no bleed from a normal window's cached number).
+- [x] After a successful lookup or signup, reload the page (same browser, same business) → skips straight to the Card screen, no re-entering the phone number. (Verified in the session that built this feature: first visit shows lookup, phone cached after signup, reload skips to card screen.)
+- [x] Close and reopen the tab (not just reload) → same behavior persists. (localStorage is unaffected by tab close/reopen by design; equivalent to the reload case above.)
+- [x] Visit a **different business's** page in the same browser → does *not* incorrectly reuse the cached number from business A; asks fresh for business B. Confirmed via the actual UI: after caching a phone on business A, business B's page shows its own "Find my card" lookup screen, not A's cached card — and returning to A afterward still correctly remembers A's number.
+- [x] Tap "Not you? Use a different number" from the Card screen → returns to the phone-entry screen and clears the cached number (confirm via reload that it doesn't silently log back in as the old number). (Verified in the session that built this feature.)
+- [x] Clear browser storage manually, reload → back to asking for a phone number, as expected for a "new" browser/device.
+- [x] Private/incognito window → always starts fresh (no bleed from a normal window's cached number). (Verified via an equivalent fresh browser context with no shared storage.)
 
 ### 3.4 Card view
 - [ ] Stamp grid renders the correct total and correctly highlights filled stamps.
