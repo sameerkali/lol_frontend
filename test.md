@@ -207,26 +207,26 @@ Test as the owner of a business you created above (or `farzi cafe`, the existing
 This is the actual product customers use — test it as if you were a real customer on a real phone, for each of several differently-configured test businesses (a plain visits-based one, a bill-amount one, and a tiers-based one).
 
 ### 3.1 First visit / lookup
-- [ ] Visiting `/b/[valid-slug]` shows the business name/branding and a phone-number entry screen.
-- [ ] Visiting `/b/[nonexistent-slug]` → a proper not-found page, not a crash.
-- [ ] Visiting `/customer` with no `?slug=` → "No business specified" message.
-- [ ] Visiting `/customer?slug=[nonexistent]` → inline "Business not found" message (note: this is a different failure mode than `/b/[slug]`'s — both should fail gracefully, just via different UI).
-- [ ] Visiting the page for a **deactivated** business → not found / unavailable, not a broken card screen.
-- [ ] Phone input only accepts digits, auto-formats as you type, and caps at 10 digits.
-- [ ] "Find my card" stays disabled until 10 digits are entered.
-- [ ] Look up a phone number that has never signed up → routes to the Signup screen.
-- [ ] Look up a phone number that already has a card → routes straight to the Card screen.
+- [x] Visiting `/b/[valid-slug]` shows the business name/branding and a phone-number entry screen.
+- [x] Visiting `/b/[nonexistent-slug]` → a proper not-found page, not a crash.
+- [x] Visiting `/customer` with no `?slug=` → "No business specified" message.
+- [x] Visiting `/customer?slug=[nonexistent]` → inline "Business not found" message (note: this is a different failure mode than `/b/[slug]`'s — both should fail gracefully, just via different UI). Takes ~1–2 seconds to appear (shows "Loading..." briefly first) due to the default one-retry-before-failing query behavior — not broken, just don't mistake the brief loading flash for a hang.
+- [x] Visiting the page for a **deactivated** business → not found / unavailable, not a broken card screen. (Verified via the public API directly in section 1.4: deactivating returns 404 for the business lookup, which this page already handles as "not found.")
+- [x] Phone input only accepts digits, auto-formats as you type, and caps at 10 digits.
+- [x] "Find my card" stays disabled until 10 digits are entered.
+- [x] Look up a phone number that has never signed up → routes to the Signup screen.
+- [x] Look up a phone number that already has a card → routes straight to the Card screen.
 
 ### 3.2 Signup
-- [ ] Only the fields enabled in that business's settings appear (test all 8 combinations of name/email/birthday on/off — or at minimum: all-off, all-on, and one mixed case).
-- [ ] All fields optional except when explicitly required — confirm you can submit with only a phone number if no fields are enabled.
-- [ ] Enter an email in an invalid format (if the email field is shown) → does the UI validate it, or does it just get silently dropped/accepted? Confirm the actual behavior either way.
-- [ ] Pick a birthday via the date field (if shown) → stored and later reflected correctly (test the "Birthdays today" dashboard widget with a birthday set to today).
-- [ ] Head-start banner ("N free stamps to start") appears only when the business has head start enabled with stamps > 0, and the new card's starting stamp count actually reflects it.
-- [ ] Try signing up the **same phone number twice** for the same business (e.g. resubmit, or sign up, clear storage, sign up again) → second attempt is rejected with a clear "already exists" error, not a duplicate customer record.
-- [ ] The same phone number signing up at **two different businesses** → two independent customer records/cards, no cross-contamination.
-- [ ] After successful signup, lands on the Card screen immediately (no extra step).
-- [ ] No overlap/visual glitch between the header and the "Start your card" heading (regression check — this was a real layout bug caused by stale scroll position carrying over between screens).
+- [x] Only the fields enabled in that business's settings appear (test all 8 combinations of name/email/birthday on/off — or at minimum: all-off, all-on, and one mixed case). (Verified all-off, mixed name+birthday, and all-on earlier this session.)
+- [x] All fields optional except when explicitly required — confirm you can submit with only a phone number if no fields are enabled.
+- [x] Enter an email in an invalid format (if the email field is shown) → does the UI validate it, or does it just get silently dropped/accepted? Confirm the actual behavior either way. **Confirmed**: no format validation anywhere — with the email field enabled, a value like `not-an-email-at-all` is accepted and stored verbatim (the input uses `type="email"`, but since the form isn't a native-submit form, the browser's built-in constraint validation never triggers). Not a bug, just worth knowing this app doesn't validate email format at signup at all.
+- [x] Pick a birthday via the date field (if shown) → stored and later reflected correctly (test the "Birthdays today" dashboard widget with a birthday set to today). (Verified in section 2.2.)
+- [x] Head-start banner ("N free stamps to start") appears only when the business has head start enabled with stamps > 0, and the new card's starting stamp count actually reflects it. (Verified in section 1.4: 0 stamps → no banner; 3 stamps → banner shown and starting count was exactly 3.)
+- [x] Try signing up the **same phone number twice** for the same business (e.g. resubmit, or sign up, clear storage, sign up again) → second attempt is rejected with a clear "already exists" error, not a duplicate customer record.
+- [x] The same phone number signing up at **two different businesses** → two independent customer records/cards, no cross-contamination.
+- [x] After successful signup, lands on the Card screen immediately (no extra step).
+- [x] No overlap/visual glitch between the header and the "Start your card" heading (regression check — this was a real layout bug caused by stale scroll position carrying over between screens). (Fixed and verified earlier this session.)
 
 ### 3.3 Returning customer (localStorage caching)
 - [ ] After a successful lookup or signup, reload the page (same browser, same business) → skips straight to the Card screen, no re-entering the phone number.
