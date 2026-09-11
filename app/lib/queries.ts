@@ -36,6 +36,7 @@ export function useCreateBusiness() {
   return useMutation({
     mutationFn: (body: any) => api.post<any>("/admin/businesses", body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "businesses"] }),
+    meta: { silent: true }, // the create form renders its own inline field errors
   });
 }
 
@@ -105,8 +106,9 @@ export function useUpdateBusinessSettings() {
 export function useUpdateBusinessPin() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { pin: string; currentPin?: string }) => api.put<any>("/business/me/pin", body),
+    mutationFn: (body: { pin: string }) => api.put<any>("/business/me/pin", body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["business", "me"] }),
+    meta: { silent: true }, // the PIN form renders its own inline field error
   });
 }
 
@@ -125,29 +127,30 @@ export function useUpdateBusinessBranding() {
 export function useChangeBusinessPassword() {
   return useMutation({
     mutationFn: (body: { currentPassword: string; newPassword: string }) => api.post<any>("/business/auth/change-password", body),
+    meta: { silent: true }, // the account form renders its own inline error
   });
 }
 
 /* ======================== PUBLIC (customer) ======================== */
 
 export function usePublicBusiness(slug: string) {
-  return useQuery({ queryKey: ["public", "business", slug], queryFn: () => api.get<any>(`/public/businesses/${slug}`), enabled: !!slug });
+  return useQuery({ queryKey: ["public", "business", slug], queryFn: () => api.get<any>(`/public/businesses/${slug}`), enabled: !!slug, meta: { silent: true } });
 }
 
 export function useCustomerLookup(slug: string) {
-  return useMutation({ mutationFn: (phone: string) => api.post<any>(`/public/businesses/${slug}/lookup`, { phone }) });
+  return useMutation({ mutationFn: (phone: string) => api.post<any>(`/public/businesses/${slug}/lookup`, { phone }), meta: { silent: true } });
 }
 
 export function useCustomerSignup(slug: string) {
-  return useMutation({ mutationFn: (body: { phone: string; name?: string; email?: string; birthday?: string }) => api.post<any>(`/public/businesses/${slug}/signup`, body) });
+  return useMutation({ mutationFn: (body: { phone: string; name?: string; email?: string; birthday?: string }) => api.post<any>(`/public/businesses/${slug}/signup`, body), meta: { silent: true } });
 }
 
 export function useCustomerCard(slug: string, phone: string) {
-  return useQuery({ queryKey: ["public", "card", slug, phone], queryFn: () => api.get<any>(`/public/businesses/${slug}/card/${phone}`), enabled: !!slug && !!phone });
+  return useQuery({ queryKey: ["public", "card", slug, phone], queryFn: () => api.get<any>(`/public/businesses/${slug}/card/${phone}`), enabled: !!slug && !!phone, meta: { silent: true } });
 }
 
 export function useCustomerHistory(slug: string, phone: string) {
-  return useQuery({ queryKey: ["public", "history", slug, phone], queryFn: () => api.get<any>(`/public/businesses/${slug}/history/${phone}`), enabled: !!slug && !!phone });
+  return useQuery({ queryKey: ["public", "history", slug, phone], queryFn: () => api.get<any>(`/public/businesses/${slug}/history/${phone}`), enabled: !!slug && !!phone, meta: { silent: true } });
 }
 
 export function useMarkVisit(slug: string) {
@@ -155,6 +158,7 @@ export function useMarkVisit(slug: string) {
   return useMutation({
     mutationFn: (body: { phone: string; billAmount?: number; pin?: string }) => api.post<any>(`/public/businesses/${slug}/visits`, body),
     onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["public", "card", slug, v.phone] }); qc.invalidateQueries({ queryKey: ["public", "history", slug, v.phone] }); },
+    meta: { silent: true },
   });
 }
 
@@ -163,5 +167,6 @@ export function useRedeem(slug: string) {
   return useMutation({
     mutationFn: (body: { phone: string; milestoneUnlockedId: string; pin: string }) => api.post<any>(`/public/businesses/${slug}/redeem`, body),
     onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["public", "card", slug, v.phone] }); qc.invalidateQueries({ queryKey: ["public", "history", slug, v.phone] }); },
+    meta: { silent: true },
   });
 }
