@@ -55,6 +55,26 @@ export function useDeleteBusiness() {
   });
 }
 
+export function usePatchBusinessPlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, plan }: { id: string; plan: string }) => api.patch<any>(`/admin/businesses/${id}/plan`, { plan }),
+    onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["admin", "businesses"] }); qc.invalidateQueries({ queryKey: ["admin", "business", v.id] }); },
+  });
+}
+
+export function usePatchBusinessStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) => api.patch<any>(`/admin/businesses/${id}/status`, { status }),
+    onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["admin", "businesses"] }); qc.invalidateQueries({ queryKey: ["admin", "business", v.id] }); },
+  });
+}
+
+export function useAdminBusinessQr(id: string) {
+  return useQuery({ queryKey: ["admin", "business", id, "qr"], queryFn: () => api.get<any>(`/admin/businesses/${id}/qr`), enabled: !!id });
+}
+
 /* ======================== BUSINESS ======================== */
 
 export function useBusinessMe() {
@@ -83,13 +103,29 @@ export function useUpdateBusinessSettings() {
 }
 
 export function useUpdateBusinessPin() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: { pin: string; currentPin?: string }) => api.put<any>("/business/me/pin", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["business", "me"] }),
   });
 }
 
 export function useBusinessQr() {
   return useQuery({ queryKey: ["business", "qr"], queryFn: () => api.get<any>("/business/me/qr") });
+}
+
+export function useUpdateBusinessBranding() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { primaryColor?: string; secondaryColor?: string }) => api.put<any>("/business/me/branding", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["business", "me"] }),
+  });
+}
+
+export function useChangeBusinessPassword() {
+  return useMutation({
+    mutationFn: (body: { currentPassword: string; newPassword: string }) => api.post<any>("/business/auth/change-password", body),
+  });
 }
 
 /* ======================== PUBLIC (customer) ======================== */

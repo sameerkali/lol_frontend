@@ -44,6 +44,38 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   return json.data ?? json;
 }
 
+async function downloadFile(path: string, filenameFallback: string): Promise<void> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${BASE}${path}`, { headers });
+  if (!res.ok) {
+    let msg = `Request failed (${res.status})`;
+    try {
+      const json = await res.json();
+      msg = json.message || msg;
+    } catch {
+      // response wasn't JSON (e.g. an actual file stream failure) — keep the generic message
+    }
+    throw new ApiError(msg, res.status);
+  }
+
+  const disposition = res.headers.get("Content-Disposition") || "";
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  const filename = match ? match[1] : filenameFallback;
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export const api = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body?: unknown) =>
@@ -55,6 +87,7 @@ export const api = {
   del: <T>(path: string) => request<T>(path, { method: "DELETE" }),
   upload: <T>(path: string, formData: FormData) =>
     request<T>(path, { method: "POST", body: formData }),
+  download: downloadFile,
 };
 
 export { ApiError };

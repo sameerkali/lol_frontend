@@ -29,6 +29,7 @@ export default function AdminPage() {
   const { user, logout, loading: authLoading } = useAuth();
   const [tab, setTab] = React.useState("businesses");
   const [showCreate, setShowCreate] = React.useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
   React.useEffect(() => {
@@ -91,7 +92,7 @@ export default function AdminPage() {
       footer={
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ font: "var(--type-body-sm)", color: "var(--ink-300)" }}>{user.name || user.email}</div>
-          <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "var(--ink-700)", border: "3px solid var(--ink-500)", borderRadius: "var(--radius-pill)", color: "var(--ink-300)", font: "var(--type-button)", cursor: "pointer" }}>
+          <button onClick={() => setShowLogoutConfirm(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "var(--ink-700)", border: "3px solid var(--ink-500)", borderRadius: "var(--radius-pill)", color: "var(--ink-300)", font: "var(--type-button)", cursor: "pointer" }}>
             <Icon name="log-out" size={16} /> Logout
           </button>
         </div>
@@ -132,23 +133,27 @@ export default function AdminPage() {
       {bizLoading ? <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading...</div> : (
         <Card pad={0} elevation={1}>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr", padding: "14px 20px", borderBottom: "var(--border)", background: "var(--paper-200)" }}>
-            {["Business", "Location", "Customers", "Status", "Actions"].map((h) => (
+            {["Business", "Plan", "Customers", "Status", "Actions"].map((h) => (
               <span key={h} style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)" }}>{h}</span>
             ))}
           </div>
           {list.map((b: any, i: number) => (
-            <div key={b._id || b.id || i} style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr", padding: "16px 20px", borderBottom: i < list.length - 1 ? "var(--border-hair)" : "none", alignItems: "center" }}>
+            <div
+              key={b._id || b.id || i}
+              onClick={() => router.push(`/admin/businesses/${b._id || b.id}`)}
+              style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr", padding: "16px 20px", borderBottom: i < list.length - 1 ? "var(--border-hair)" : "none", alignItems: "center", cursor: "pointer" }}
+            >
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <span style={{ width: 34, height: 34, display: "grid", placeItems: "center", background: "var(--grape-100)", border: "var(--border-hair)", borderRadius: "50%", font: "700 13px/1 var(--font-body)", color: "var(--grape-700)" }}>
                   {(b.name || "?").charAt(0)}
                 </span>
                 <span style={{ font: "600 14px/1.3 var(--font-body)", color: "var(--text-strong)" }}>{b.name}</span>
               </div>
-              <span style={{ font: "var(--type-body)", color: "var(--text-body)" }}>{b.location || "—"}</span>
+              <span style={{ font: "var(--type-body)", color: "var(--text-body)" }}>{b.plan || "trial"}</span>
               <span style={{ font: "700 15px/1 var(--font-mono)", color: "var(--text-strong)" }}>{b.customerCount ?? "—"}</span>
               <Badge tone={b.status === "active" ? "success" : "danger"} size="sm">{b.status || "active"}</Badge>
-              <div style={{ display: "flex", gap: 8 }}>
-                <Button variant="ghost" size="sm" onClick={() => router.push(`/business/${b._id || b.id}`)}>Open</Button>
+              <div style={{ display: "flex", gap: 8 }} onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/businesses/${b._id || b.id}`)}>Open</Button>
                 <button onClick={() => { if (confirm(`Delete ${b.name}?`)) deleteMut.mutate(b._id || b.id); }} style={{ width: 32, height: 32, display: "grid", placeItems: "center", background: "var(--coral-100)", border: "var(--border-hair)", borderRadius: "var(--radius-sm)", cursor: "pointer", color: "var(--coral-700)" }}>
                   <Icon name="trash-2" size={14} />
                 </button>
@@ -239,6 +244,21 @@ export default function AdminPage() {
             <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}>Cancel</Button>
           </div>
         </div>
+      </Dialog>
+
+      <Dialog
+        open={showLogoutConfirm}
+        title="Log out?"
+        onClose={() => setShowLogoutConfirm(false)}
+        width={360}
+        footer={
+          <>
+            <Button variant="ghost" size="sm" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
+            <Button variant="danger" size="sm" onClick={handleLogout}>Log out</Button>
+          </>
+        }
+      >
+        You'll need to sign in again to access the admin panel.
       </Dialog>
     </div>
   );

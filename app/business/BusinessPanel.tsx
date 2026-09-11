@@ -2,75 +2,34 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../lib/auth";
-import { useBusinessMe, useBusinessDashboard, useBusinessCustomers, useUpdateBusinessSettings, useUpdateBusinessPin, useBusinessQr } from "../lib/queries";
+import {
+  useBusinessMe,
+  useBusinessDashboard,
+  useBusinessCustomers,
+  useUpdateBusinessSettings,
+  useUpdateBusinessPin,
+  useUpdateBusinessBranding,
+  useChangeBusinessPassword,
+  useBusinessQr,
+} from "../lib/queries";
+import { api } from "../lib/api";
 import { Button } from "../components/core/Button";
 import { Card } from "../components/core/Card";
 import { Badge } from "../components/core/Badge";
 import { Icon } from "../components/core/Icon";
 import { Input } from "../components/forms/Input";
+import { Select } from "../components/forms/Select";
 import { StatTile } from "../components/loyalty/StatTile";
-import { MilestoneLadder } from "../components/loyalty/MilestoneLadder";
 import { SideNav } from "../components/navigation/SideNav";
-import { validatePinFormat, splitFieldErrors } from "../lib/validation";
-
-const PIN_FIELDS = ["pin"] as const;
-
-function PinInputs({ pinMut }: { pinMut: any }) {
-  const [currentPin, setCurrentPin] = React.useState("");
-  const [newPin, setNewPin] = React.useState("");
-  const [newPinError, setNewPinError] = React.useState("");
-  const [pinFormError, setPinFormError] = React.useState("");
-
-  // The API returns a per-field "pin" detail on bad format, and a bare
-  // message (no details) when currentPin is missing/wrong — surface both
-  // in the right place even though client-side validation should already
-  // catch the format case before it ever reaches the network.
-  React.useEffect(() => {
-    if (!pinMut.isError) { setPinFormError(""); return; }
-    const { fields, general } = splitFieldErrors(pinMut.error?.details, PIN_FIELDS);
-    setNewPinError(fields.pin || "");
-    setPinFormError(fields.pin ? "" : general.join(" ") || pinMut.error?.message || "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pinMut.isError, pinMut.error]);
-
-  const submit = () => {
-    const err = validatePinFormat(newPin);
-    setNewPinError(err || "");
-    setPinFormError("");
-    if (err) return;
-    pinMut.mutate({ pin: newPin, currentPin: currentPin || undefined });
-  };
-
-  return (
-    <>
-      <Input
-        label="Current PIN"
-        type="password"
-        mono
-        placeholder="Enter current PIN"
-        value={currentPin}
-        onChange={setCurrentPin}
-        hint="Only required if a PIN is already set on this business."
-      />
-      <Input
-        label="New PIN"
-        type="password"
-        mono
-        placeholder="4-6 digit PIN"
-        value={newPin}
-        onChange={(v) => { setNewPin(v); if (newPinError) setNewPinError(""); }}
-        error={newPinError}
-      />
-      <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-        <Button variant="primary" size="sm" onClick={submit} disabled={pinMut.isPending || !newPin}>
-          {pinMut.isPending ? "Updating..." : "Update PIN"}
-        </Button>
-      </div>
-      {pinFormError && <div role="alert" style={{ font: "600 14px/1.4 var(--font-body)", color: "var(--danger-ink)" }}>{pinFormError}</div>}
-      {pinMut.isSuccess && <div style={{ font: "600 14px/1.4 var(--font-body)", color: "var(--success-ink)" }}>PIN updated.</div>}
-    </>
-  );
-}
+import { Dialog } from "../components/feedback/Dialog";
+import { splitFieldErrors } from "../lib/validation";
+import {
+  EarningSection,
+  MilestonesSection,
+  SignupRewardsSection,
+  BrandingSection,
+  PinSection,
+} from "./SettingsPanel";
 
 const NAV = [
   { value: "dashboard", label: "Dashboard", icon: "layout-dashboard" },
@@ -80,11 +39,74 @@ const NAV = [
   { value: "qr", label: "QR Code", icon: "qr-code" },
 ];
 
+const SETTINGS_TABS = [
+  { value: "general", label: "Earning & check-in" },
+  { value: "signup", label: "Signup & rewards" },
+  { value: "branding", label: "Branding" },
+  { value: "pin", label: "PIN" },
+  { value: "account", label: "Account" },
+];
+
+function SectionHeader({ eyebrow, title, action }: { eyebrow: string; title: string; action?: React.ReactNode }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+      <div>
+        <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 8 }}>
+          {eyebrow}
+        </div>
+        <h1 style={{ margin: 0, font: "var(--type-title)", letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>{title}</h1>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function AccountSection() {
+  const changeMut = useChangeBusinessPassword();
+  const [currentPassword, setCurrentPassword] = React.useState("");
+  const [newPassword, setNewPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+
+  const submit = async () => {
+    setError("");
+    try {
+      await changeMut.mutateAsync({ currentPassword, newPassword });
+      setCurrentPassword("");
+      setNewPassword("");
+    } catch (e: any) {
+      setError(e.message || "Failed to change password");
+    }
+  };
+
+  return (
+    <Card pad={24}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 420 }}>
+        <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Change password</div>
+        <Input label="Current password" type="password" value={currentPassword} onChange={setCurrentPassword} />
+        <Input label="New password" type="password" value={newPassword} onChange={setNewPassword} hint="At least 8 characters." />
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <Button variant="primary" size="sm" onClick={submit} disabled={changeMut.isPending || !currentPassword || newPassword.length < 8}>
+            {changeMut.isPending ? "Updating..." : "Update password"}
+          </Button>
+          {changeMut.isSuccess && <span style={{ font: "600 13px/1 var(--font-body)", color: "var(--success-ink)" }}>Updated.</span>}
+        </div>
+        {error && <div role="alert" style={{ font: "600 14px/1.4 var(--font-body)", color: "var(--danger-ink)" }}>{error}</div>}
+      </div>
+    </Card>
+  );
+}
+
 export default function BusinessPanel() {
   const router = useRouter();
   const { user, logout, loading: authLoading } = useAuth();
   const [tab, setTab] = React.useState("dashboard");
-  const [settingsTab, setSettingsTab] = React.useState<"general" | "milestones" | "pin">("general");
+  const [settingsTab, setSettingsTab] = React.useState<"general" | "signup" | "branding" | "pin" | "account">("general");
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
+  const [pinRevealDash, setPinRevealDash] = React.useState(false);
+
+  const [customerSearch, setCustomerSearch] = React.useState("");
+  const [customerSort, setCustomerSort] = React.useState("newest");
+  const [onlyUnredeemed, setOnlyUnredeemed] = React.useState(false);
 
   React.useEffect(() => {
     if (!authLoading && !user) router.replace("/business/login");
@@ -92,10 +114,18 @@ export default function BusinessPanel() {
 
   const { data: me, isLoading: meLoading } = useBusinessMe();
   const { data: dash } = useBusinessDashboard();
-  const { data: custData, isLoading: custLoading } = useBusinessCustomers();
+  const customerParams = React.useMemo(() => {
+    const p: Record<string, string> = { sort: customerSort };
+    if (customerSearch.trim()) p.phone = customerSearch.trim();
+    if (onlyUnredeemed) p.hasUnredeemedRewards = "true";
+    return p;
+  }, [customerSearch, customerSort, onlyUnredeemed]);
+  const { data: custData, isLoading: custLoading } = useBusinessCustomers(customerParams);
   const { data: qr } = useBusinessQr();
+
   const updateMut = useUpdateBusinessSettings();
   const pinMut = useUpdateBusinessPin();
+  const brandingMut = useUpdateBusinessBranding();
 
   const handleLogout = () => { logout(); router.replace("/business/login"); };
 
@@ -105,6 +135,16 @@ export default function BusinessPanel() {
   const milestones = b.milestones || [];
   const customers = custData?.customers || custData || [];
   const list = Array.isArray(customers) ? customers : [];
+
+  const savePin = async (pin: string, currentPin?: string) => {
+    await pinMut.mutateAsync({ pin, currentPin });
+  };
+  const pinFieldError = (() => {
+    if (!pinMut.isError) return "";
+    const err = pinMut.error as any;
+    const { fields, general } = splitFieldErrors(err?.details, ["pin"] as const);
+    return fields.pin || general.join(" ") || err?.message || "";
+  })();
 
   const Sidebar = (
     <SideNav
@@ -116,7 +156,10 @@ export default function BusinessPanel() {
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ font: "var(--type-body-sm)", color: "var(--ink-300)" }}>{b.name || "Business"}</div>
           <div style={{ font: "var(--type-mono)", color: "var(--ink-500)", fontSize: 11 }}>{user.email}</div>
-          <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "var(--ink-700)", border: "3px solid var(--ink-500)", borderRadius: "var(--radius-pill)", color: "var(--ink-300)", font: "var(--type-button)", cursor: "pointer", marginTop: 4 }}>
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "var(--ink-700)", border: "3px solid var(--ink-500)", borderRadius: "var(--radius-pill)", color: "var(--ink-300)", font: "var(--type-button)", cursor: "pointer", marginTop: 4 }}
+          >
             <Icon name="log-out" size={16} /> Logout
           </button>
         </div>
@@ -127,18 +170,42 @@ export default function BusinessPanel() {
   /* ---------- Dashboard ---------- */
   const Dashboard = (
     <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28 }}>
-      <div>
-        <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 8 }}>Dashboard</div>
-        <h1 style={{ margin: 0, font: "var(--type-title)", letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>{b.name || "..."}</h1>
-      </div>
+      <SectionHeader eyebrow="Dashboard" title={b.name || "..."} />
       {dash && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
           <StatTile label="Total customers" value={dash.totalCustomers ?? list.length} icon="users" tone="grape" />
-          <StatTile label="Visits (30d)" value={dash.visits?.length ?? 0} icon="stamp" tone="mint" />
-          <StatTile label="Redemptions" value={dash.redemptions ?? 0} icon="gift" tone="sun" />
-          <StatTile label="Repeat rate" value={dash.repeatVisitRate ? `${Math.round(dash.repeatVisitRate)}%` : "—"} icon="trending-up" tone="sky" />
+          <StatTile label="Visits (30d)" value={dash.visits ?? 0} icon="stamp" tone="mint" />
+          <StatTile label="Redemptions (30d)" value={dash.redemptions ?? 0} icon="gift" tone="sun" />
+          <StatTile label="Repeat visit rate" value={dash.repeatVisitRate != null ? `${dash.repeatVisitRate}%` : "—"} icon="trending-up" tone="sky" />
         </div>
       )}
+
+      <Card pad={20}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <span style={{ width: 44, height: 44, display: "grid", placeItems: "center", background: "var(--surface-sunk)", borderRadius: "var(--radius-md)", border: "var(--border-hair)" }}>
+              <Icon name="key" size={20} color="var(--ink-500)" />
+            </span>
+            <div>
+              <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)" }}>Business PIN</div>
+              <div style={{ font: "700 26px/1 var(--font-mono)", letterSpacing: "0.1em", color: "var(--text-strong)", marginTop: 4 }}>
+                {meLoading ? "—" : b.pin ? (pinRevealDash ? b.pin : "••••") : "Not set"}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {b.pin && (
+              <Button variant="ghost" size="sm" icon={<Icon name={pinRevealDash ? "eye-off" : "eye"} size={16} />} onClick={() => setPinRevealDash((v) => !v)}>
+                {pinRevealDash ? "Hide" : "Show"}
+              </Button>
+            )}
+            <Button variant="secondary" size="sm" icon={<Icon name="pencil" size={16} />} onClick={() => { setTab("settings"); setSettingsTab("pin"); }}>
+              Change
+            </Button>
+          </div>
+        </div>
+      </Card>
+
       {meLoading ? <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading...</div> : (
         <Card pad={24}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
@@ -153,9 +220,9 @@ export default function BusinessPanel() {
                 </span>
                 <div style={{ flex: 1 }}>
                   <div style={{ font: "600 15px/1.3 var(--font-body)", color: "var(--text-strong)" }}>{c.name || c.phone}</div>
-                  <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>{c.totalVisits ?? c.visits ?? 0} visits</div>
+                  <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>{c.totalVisits ?? 0} visits · {c.totalPoints ?? 0} points</div>
                 </div>
-                <Badge tone={c.tier === "Gold" ? "reward" : "neutral"} size="sm">{c.tier || "—"}</Badge>
+                <Badge tone={c.ruleSnapshot?.tierName ? "reward" : "neutral"} size="sm">{c.ruleSnapshot?.tierName || "—"}</Badge>
               </div>
             ))}
             {list.length === 0 && <div style={{ padding: 20, textAlign: "center", color: "var(--text-muted)" }}>No customers yet.</div>}
@@ -168,38 +235,53 @@ export default function BusinessPanel() {
   /* ---------- Milestones ---------- */
   const Milestones = (
     <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 8 }}>Milestones</div>
-          <h1 style={{ margin: 0, font: "var(--type-title)", letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>Reward ladder</h1>
-        </div>
-      </div>
-      <Card pad={24}>
-        {milestones.length > 0 ? (
-          <MilestoneLadder milestones={milestones.map((m: any) => ({ count: m.count, label: m.label }))} current={0} />
-        ) : (
-          <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>No milestones configured yet.</div>
-        )}
-      </Card>
+      <SectionHeader eyebrow="Milestones" title="Reward ladder" />
+      {meLoading ? (
+        <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading...</div>
+      ) : (
+        <MilestonesSection business={b} onSave={(patch) => updateMut.mutateAsync(patch)} saving={updateMut.isPending} key={b.updatedAt} />
+      )}
     </div>
   );
 
   /* ---------- Customers ---------- */
   const Customers = (
     <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 8 }}>Customers</div>
-        <h1 style={{ margin: 0, font: "var(--type-title)", letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>All customers</h1>
+      <SectionHeader
+        eyebrow="Customers"
+        title="All customers"
+        action={
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<Icon name="download" size={16} />}
+            onClick={() => api.download(`/business/customers/export?${new URLSearchParams(customerParams).toString()}`, "customers.csv")}
+          >
+            Export CSV
+          </Button>
+        }
+      />
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+        <Input placeholder="Search by phone..." icon="search" value={customerSearch} onChange={setCustomerSearch} style={{ width: 240 }} />
+        <Select value={customerSort} onChange={setCustomerSort} options={[
+          { value: "newest", label: "Newest first" },
+          { value: "visits", label: "Most visits" },
+          { value: "lastVisit", label: "Last visit" },
+        ]} style={{ width: 190 }} />
+        <label style={{ display: "flex", alignItems: "center", gap: 8, font: "var(--type-body-sm)", color: "var(--text-body)", cursor: "pointer" }}>
+          <input type="checkbox" checked={onlyUnredeemed} onChange={(e) => setOnlyUnredeemed(e.target.checked)} />
+          Unredeemed rewards only
+        </label>
       </div>
       {custLoading ? <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading...</div> : (
         <Card pad={0} elevation={1}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr", padding: "14px 20px", borderBottom: "var(--border)", background: "var(--paper-200)" }}>
-            {["Name", "Phone", "Visits", "Tier", "Last visit"].map((h) => (
+          <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.3fr 0.8fr 0.8fr 1fr 1fr", padding: "14px 20px", borderBottom: "var(--border)", background: "var(--paper-200)" }}>
+            {["Name", "Phone", "Visits", "Points", "Tier", "Last visit"].map((h) => (
               <span key={h} style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)" }}>{h}</span>
             ))}
           </div>
           {list.map((c: any, i: number) => (
-            <div key={c._id || i} style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr", padding: "16px 20px", borderBottom: i < list.length - 1 ? "var(--border-hair)" : "none", alignItems: "center" }}>
+            <div key={c._id || i} style={{ display: "grid", gridTemplateColumns: "1.8fr 1.3fr 0.8fr 0.8fr 1fr 1fr", padding: "16px 20px", borderBottom: i < list.length - 1 ? "var(--border-hair)" : "none", alignItems: "center" }}>
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <span style={{ width: 34, height: 34, display: "grid", placeItems: "center", background: "var(--grape-100)", border: "var(--border-hair)", borderRadius: "50%", font: "700 13px/1 var(--font-body)", color: "var(--grape-700)" }}>
                   {(c.name || c.phone || "?").charAt(0)}
@@ -208,7 +290,8 @@ export default function BusinessPanel() {
               </div>
               <span style={{ font: "var(--type-mono)", color: "var(--text-body)", fontSize: 13 }}>{c.phone}</span>
               <span style={{ font: "700 15px/1 var(--font-mono)", color: "var(--text-strong)" }}>{c.totalVisits ?? 0}</span>
-              <Badge tone={c.tier === "Gold" ? "reward" : "neutral"} size="sm">{c.tier || "—"}</Badge>
+              <span style={{ font: "700 15px/1 var(--font-mono)", color: "var(--text-strong)" }}>{c.totalPoints ?? 0}</span>
+              <Badge tone={c.ruleSnapshot?.tierName ? "reward" : "neutral"} size="sm">{c.ruleSnapshot?.tierName || "—"}</Badge>
               <span style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>{c.lastVisitAt ? new Date(c.lastVisitAt).toLocaleDateString() : "—"}</span>
             </div>
           ))}
@@ -221,64 +304,98 @@ export default function BusinessPanel() {
   /* ---------- Settings ---------- */
   const Settings = (
     <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28 }}>
-      <div>
-        <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 8 }}>Settings</div>
-        <h1 style={{ margin: 0, font: "var(--type-title)", letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>Business settings</h1>
-      </div>
-      <div style={{ display: "flex", gap: 12 }}>
-        {(["general", "milestones", "pin"] as const).map((s) => (
-          <button key={s} onClick={() => setSettingsTab(s)} style={{ padding: "10px 20px", borderRadius: "var(--radius-pill)", border: settingsTab === s ? "var(--border)" : "3px solid transparent", background: settingsTab === s ? "var(--paper-000)" : "transparent", boxShadow: settingsTab === s ? "var(--pop-1)" : "none", font: "var(--type-button)", color: settingsTab === s ? "var(--text-strong)" : "var(--text-muted)", cursor: "pointer", textTransform: "capitalize" }}>{s}</button>
+      <SectionHeader eyebrow="Settings" title="Business settings" />
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        {SETTINGS_TABS.map((s) => (
+          <button
+            key={s.value}
+            onClick={() => setSettingsTab(s.value as any)}
+            style={{
+              padding: "10px 20px",
+              borderRadius: "var(--radius-pill)",
+              border: settingsTab === s.value ? "var(--border)" : "3px solid transparent",
+              background: settingsTab === s.value ? "var(--paper-000)" : "transparent",
+              boxShadow: settingsTab === s.value ? "var(--pop-1)" : "none",
+              font: "var(--type-button)",
+              color: settingsTab === s.value ? "var(--text-strong)" : "var(--text-muted)",
+              cursor: "pointer",
+            }}
+          >
+            {s.label}
+          </button>
         ))}
       </div>
-      {settingsTab === "general" && (
-        <Card pad={24}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 480 }}>
-            <Input label="Business name" value={b.name || ""} placeholder="Your business name" onChange={(v) => updateMut.mutate({ name: v })} />
-            <Input label="Earning mode" value={b.earningMode || "visits"} placeholder="visits" onChange={(v) => updateMut.mutate({ earningMode: v })} />
-            <Input label="Check-in mode" value={b.checkInMode || "pin"} placeholder="pin" onChange={(v) => updateMut.mutate({ checkInMode: v })} />
-            <Input label="Stamp limit per day" value={String(b.stampLimitPerDay ?? "")} placeholder="3" onChange={(v) => updateMut.mutate({ stampLimitPerDay: Number(v) })} />
-            <Input label="Lapsed after days" value={String(b.lapsedAfterDays ?? "")} placeholder="42" onChange={(v) => updateMut.mutate({ lapsedAfterDays: Number(v) })} />
-            {updateMut.isPending && <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>Saving...</div>}
-          </div>
-        </Card>
-      )}
-      {settingsTab === "milestones" && (
-        <Card pad={24}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 480 }}>
-            <div style={{ font: "var(--type-body)", color: "var(--text-body)" }}>Edit the rewards your customers work toward.</div>
-            {milestones.map((m: any, i: number) => (
-              <div key={i} style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <span style={{ font: "700 15px/1 var(--font-mono)", color: "var(--text-strong)", width: 40 }}>{m.count}</span>
-                <span style={{ flex: 1, font: "var(--type-body)", color: "var(--text-body)" }}>{m.label}</span>
-              </div>
-            ))}
-            {milestones.length === 0 && <div style={{ color: "var(--text-muted)" }}>No milestones set.</div>}
-          </div>
-        </Card>
-      )}
-      {settingsTab === "pin" && (
-        <Card pad={24}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 480 }}>
-            <div style={{ font: "var(--type-body)", color: "var(--text-body)" }}>Change the staff PIN used to confirm visits and redeem rewards.</div>
-            <PinInputs pinMut={pinMut} />
-          </div>
-        </Card>
+      {meLoading ? (
+        <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading...</div>
+      ) : (
+        <>
+          {settingsTab === "general" && (
+            <EarningSection business={b} onSave={(patch) => updateMut.mutateAsync(patch)} saving={updateMut.isPending} key={`general-${b.updatedAt}`} />
+          )}
+          {settingsTab === "signup" && (
+            <SignupRewardsSection business={b} onSave={(patch) => updateMut.mutateAsync(patch)} saving={updateMut.isPending} key={`signup-${b.updatedAt}`} />
+          )}
+          {settingsTab === "branding" && (
+            <BrandingSection branding={b.branding || {}} onSave={(patch) => brandingMut.mutateAsync(patch)} saving={brandingMut.isPending} key={`branding-${b.updatedAt}`} />
+          )}
+          {settingsTab === "pin" && (
+            <PinSection
+              pin={b.pin}
+              hasPin={!!b.pin}
+              requireCurrentPin
+              onSave={savePin}
+              saving={pinMut.isPending}
+              error={pinFieldError}
+              key={`pin-${b.updatedAt}`}
+            />
+          )}
+          {settingsTab === "account" && <AccountSection />}
+        </>
       )}
     </div>
   );
 
   /* ---------- QR ---------- */
   const QrCode = (
-    <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28, maxWidth: 480 }}>
-      <div>
-        <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 8 }}>QR Code</div>
-        <h1 style={{ margin: 0, font: "var(--type-title)", letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>Scan to get stamps</h1>
-      </div>
+    <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28, maxWidth: 560 }}>
+      <SectionHeader eyebrow="QR Code" title="Scan to get stamps" />
       {qr?.qrCodeDataUrl ? (
-        <Card pad={24} style={{ textAlign: "center" }}>
-          <img src={qr.qrCodeDataUrl} alt="QR Code" style={{ width: 240, height: 240, margin: "0 auto" }} />
-          <div style={{ font: "var(--type-body)", color: "var(--text-muted)", marginTop: 16 }}>{qr.link}</div>
-        </Card>
+        <>
+          <Card pad={24} style={{ textAlign: "center" }}>
+            <img src={qr.qrCodeDataUrl} alt="QR Code" style={{ width: 240, height: 240, margin: "0 auto", borderRadius: 12 }} />
+            <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", marginTop: 16, wordBreak: "break-all" }}>{qr.link}</div>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 20 }}>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Icon name="copy" size={16} />}
+                onClick={() => navigator.clipboard?.writeText(qr.link)}
+              >
+                Copy link
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Icon name="download" size={16} />}
+                onClick={() => api.download("/business/me/qr/download", `${b.slug || "loyalty"}-qr.png`)}
+              >
+                Download PNG
+              </Button>
+            </div>
+          </Card>
+          <Card tone="sunk" pad={20} elevation={0}>
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <Icon name="nfc" size={18} color="var(--sky-500)" />
+              <div>
+                <div style={{ font: "600 14px/1.4 var(--font-body)", color: "var(--text-strong)" }}>Same link for NFC and QR</div>
+                <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", marginTop: 4 }}>
+                  Program this link onto the NFC tag at the counter. The QR code above opens the same page for phones without NFC —
+                  print it on a table poster or tent card.
+                </div>
+              </div>
+            </div>
+          </Card>
+        </>
       ) : (
         <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading QR code...</div>
       )}
@@ -291,6 +408,21 @@ export default function BusinessPanel() {
     <div style={{ display: "flex", height: "100vh", background: "var(--surface-page)" }}>
       {Sidebar}
       <main style={{ flex: 1, overflowY: "auto", maxWidth: "var(--width-panel)" }}>{content}</main>
+
+      <Dialog
+        open={showLogoutConfirm}
+        title="Log out?"
+        onClose={() => setShowLogoutConfirm(false)}
+        width={380}
+        footer={
+          <>
+            <Button variant="ghost" size="sm" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
+            <Button variant="danger" size="sm" onClick={handleLogout}>Log out</Button>
+          </>
+        }
+      >
+        You'll need to sign in again to manage {b.name || "your business"}.
+      </Dialog>
     </div>
   );
 }

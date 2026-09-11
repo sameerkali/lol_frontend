@@ -6,7 +6,10 @@ import {
   AlertCircle, Info, Check, X, Trash2, Plus, PlusCircle, Search,
   LayoutDashboard, Flag, Users, Settings, Store, MapPin, Mail,
   CreditCard, Sparkles, Inbox, Delete, Gift as GiftIcon, Eye, EyeOff,
-  Lock, LogOut, Hash, QrCode,
+  Lock, LogOut, Hash, QrCode, ChevronDown, Pencil, Copy, Download,
+  Link2, Star, Crown, Calendar, Key, MoreHorizontal, ArrowLeft,
+  Printer, Palette, AlertTriangle, RefreshCw, Save, ExternalLink,
+  Building2, Percent, Layers, ShieldCheck, ShieldOff, Ban, ChevronLeft,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, React.ComponentType<any>> = {
@@ -49,6 +52,30 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
   "log-out": LogOut,
   hash: Hash,
   "qr-code": QrCode,
+  "chevron-down": ChevronDown,
+  "chevron-left": ChevronLeft,
+  pencil: Pencil,
+  copy: Copy,
+  download: Download,
+  link: Link2,
+  star: Star,
+  crown: Crown,
+  calendar: Calendar,
+  key: Key,
+  "more-horizontal": MoreHorizontal,
+  "arrow-left": ArrowLeft,
+  printer: Printer,
+  palette: Palette,
+  "alert-triangle": AlertTriangle,
+  "refresh-cw": RefreshCw,
+  save: Save,
+  "external-link": ExternalLink,
+  building: Building2,
+  percent: Percent,
+  layers: Layers,
+  "shield-check": ShieldCheck,
+  "shield-off": ShieldOff,
+  ban: Ban,
 };
 
 export function Icon({
