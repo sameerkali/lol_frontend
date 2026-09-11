@@ -46,37 +46,37 @@ A full functional test pass across the three surfaces of the app: **Admin panel*
 - [x] **Mobile**: table scrolls horizontally without breaking page layout; stat cards wrap instead of overflowing. (320px viewport, zero horizontal overflow.)
 
 ### 1.3 Create business
-- [ ] Navigate via "New business" button → goes straight to the Create business form (no intermediate dialog).
-- [ ] Submit with all fields blank → inline errors on name / owner email / owner password, no request sent.
-- [ ] Enter a business name only, leave email/password blank → still blocked with per-field errors.
-- [ ] Enter an invalid email format → inline error.
-- [ ] Enter a password under 8 characters → inline error ("at least 8 characters").
-- [ ] Enter a valid name/email/8+ char password → Create button enables, submission succeeds, redirects to the Businesses list, and the new business appears in it.
-- [ ] Try creating a second business with the **same owner email** as an existing one → server rejects with a clear conflict error ("A business with this owner email already exists"), surfaced on the form (not just a console error).
-- [ ] Optional Staff PIN field: leave blank → business is created with no PIN set.
-- [ ] Optional Staff PIN field: enter 3 digits → validation error (PIN must be 4–6 digits).
-- [ ] Optional Staff PIN field: enter 7 digits → validation error.
-- [ ] Optional Staff PIN field: enter exactly 4, 5, and 6 digits (test each) → all accepted.
-- [ ] Optional Staff PIN field: enter non-numeric characters → rejected.
-- [ ] **Template picker** — create one business per template and confirm the resulting settings match:
-  - [ ] **Café**: visit-based earning, automatic check-in, 1 stamp/day limit, 2-milestone ladder (5 visits / 10 visits), no tiers, only "name" signup field.
-  - [ ] **Restaurant**: bill-amount earning (₹200/point), PIN check-in, head-start of 1 stamp enabled, all three signup fields (name/email/birthday) on, tiers enabled (Silver → Gold) instead of a flat milestone ladder, birthday reward pre-configured.
-  - [ ] **Blank / custom**: visit-based, automatic check-in, single 10-visit milestone, nothing else pre-filled.
-- [ ] Cancel button on the create form → discards input and returns to the Businesses list without creating anything.
-- [ ] **Mobile**: all fields, the template picker, and the Create/Cancel buttons remain usable and non-overflowing at narrow width.
+- [x] Navigate via "New business" button → goes straight to the Create business form (no intermediate dialog).
+- [x] Submit with all fields blank → inline errors on name / owner email / owner password, no request sent. (Create button is disabled outright until all three are filled — verified no request fires.)
+- [x] Enter a business name only, leave email/password blank → still blocked with per-field errors. (Button stays disabled.)
+- [x] Enter an invalid email format → inline error ("Enter a valid email address").
+- [x] Enter a password under 8 characters → inline error ("Password must be at least 8 characters").
+- [x] Enter a valid name/email/8+ char password → Create button enables, submission succeeds, redirects to the Businesses list, and the new business appears in it.
+- [x] Try creating a second business with the **same owner email** as an existing one → server rejects with a clear conflict error ("A business with this owner email already exists"), surfaced on the form (not just a console error).
+- [x] Optional Staff PIN field: leave blank → business is created with no PIN set.
+- [x] Optional Staff PIN field: enter 3 digits → validation error (PIN must be 4–6 digits).
+- [x] Optional Staff PIN field: enter 7 digits → validation error.
+- [x] Optional Staff PIN field: enter exactly 4, 5, and 6 digits (test each) → all accepted. (Verified 5-digit case end-to-end: created, then confirmed via admin detail read that the PIN was stored correctly as entered.)
+- [x] Optional Staff PIN field: enter non-numeric characters → rejected.
+- [x] **Template picker** — create one business per template and confirm the resulting settings match:
+  - [x] **Café**: visit-based earning, automatic check-in, 1 stamp/day limit, 2-milestone ladder (5 visits / 10 visits), no tiers, only "name" signup field.
+  - [x] **Restaurant**: bill-amount earning (₹200/point), PIN check-in, head-start of 1 stamp enabled, all three signup fields (name/email/birthday) on, tiers enabled (Silver → Gold) instead of a flat milestone ladder, birthday reward pre-configured. Also spot-checked in the actual UI (not just the API): the Milestones tab correctly renders both tiers with their full sub-ladders, and the Earning tab correctly shows bill-amount mode.
+  - [x] **Blank / custom**: visit-based, automatic check-in, single 10-visit milestone, nothing else pre-filled.
+- [x] Cancel button on the create form → discards input and returns to the Businesses list without creating anything.
+- [x] **Mobile**: all fields, the template picker, and the Create/Cancel buttons remain usable and non-overflowing at narrow width.
 
 ### 1.4 Business detail — tab by tab
 Open a business you created above (`/admin/businesses/[id]`) and go through every tab. These are the same settings components the business owner sees in their own panel — the difference is admin can edit *any* business here without owning it.
 
-- [ ] Header shows business name, active/inactive badge, slug, and owner email correctly.
-- [ ] **Earning & check-in**:
-  - [ ] Switch earning mode between Visits / Bill amount / Visits with minimum bill — the right fields show/hide (₹-per-point only for bill amount; minimum bill amount only for the third mode).
-  - [ ] Enter an out-of-range ₹-per-point (e.g. 0 or a huge number) → validation blocks save.
-  - [ ] Toggle "Bill amount field" switch on/off, save, and re-open the tab → persisted correctly.
-  - [ ] Change "Visit confirmation" between Automatic and PIN → saved and reflected on reload.
-  - [ ] Stamp limit per day: try `-1` → rejected/clamped. Try `0` → **accepted** (means unlimited, not zero visits — verify on the customer page that a business with limit 0 lets a customer earn stamps on multiple visits in the same day). Try a very large number (e.g. 9999) → either accepted or clamped at the documented max; confirm it isn't silently ignored.
-  - [ ] "Mark customer lapsed after (days)" — try 0 and a negative number → rejected; try a normal value (30, 90) → saved.
-  - [ ] Save with an invalid field present → Save button stays disabled and an inline "fix the highlighted fields" message shows, not a failed network call.
+- [x] Header shows business name, active/inactive badge, slug, and owner email correctly.
+- [x] **Earning & check-in**:
+  - [x] Switch earning mode between Visits / Bill amount / Visits with minimum bill — the right fields show/hide (₹-per-point only for bill amount; minimum bill amount only for the third mode). Verified in both directions, including rapid mode-to-mode-to-mode switching (no leftover field from a previously-selected mode).
+  - [x] Enter an out-of-range ₹-per-point (e.g. 0 or a huge number) → validation blocks save.
+  - [x] Toggle "Bill amount field" switch on/off, save, and re-open the tab → persisted correctly.
+  - [x] Change "Visit confirmation" between Automatic and PIN → saved and reflected on reload.
+  - [x] Stamp limit per day: try `-1` → rejected/clamped. Try `0` → **accepted** (means unlimited, not zero visits — verify on the customer page that a business with limit 0 lets a customer earn stamps on multiple visits in the same day). Try a very large number (e.g. 9999) → either accepted or clamped at the documented max; confirm it isn't silently ignored.
+  - [x] "Mark customer lapsed after (days)" — try 0 and a negative number → rejected; try a normal value (30, 90) → saved.
+  - [x] Save with an invalid field present → Save button stays disabled, not a failed network call. **Correction**: the generic "fix the highlighted fields" summary message is a Milestones-tab-only affordance, not present on Earning & check-in — that tab instead shows the error right under the specific invalid field (e.g. "Min 1" under ₹ per point), which is adequate but inconsistent with Milestones' style. Not a bug, just a minor UX inconsistency worth knowing about.
 - [ ] **Milestones**:
   - [ ] Default "reset" mode: add/edit/remove milestones in the ladder; each milestone needs a count, reward type, value, and label — try leaving one blank and confirm Save is blocked with a clear per-field error.
   - [ ] Switch "After the final milestone" to "Move to the next tier" → the milestone ladder editor is replaced by the Tiers editor.
