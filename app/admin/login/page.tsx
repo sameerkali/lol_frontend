@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "../../components/core/Button";
 import { Card } from "../../components/core/Card";
 import { Input } from "../../components/forms/Input";
+import { Skeleton } from "../../components/feedback/Skeleton";
 import { validateLoginForm, splitFieldErrors, type LoginFieldErrors } from "../../lib/validation";
 
 const FIELDS = ["email", "password"] as const;
@@ -42,7 +43,21 @@ export default function AdminLogin() {
     }
   };
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-page)", padding: 24 }}>
+        <Card pad={32} style={{ width: "100%", maxWidth: 400 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
+            <Skeleton width={120} height={44} />
+            <Skeleton width={160} height={14} style={{ marginBottom: 8 }} />
+            <Skeleton height={56} />
+            <Skeleton height={56} />
+            <Skeleton height={60} radius="var(--radius-pill)" />
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-page)", padding: 24 }}>

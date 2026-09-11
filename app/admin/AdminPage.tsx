@@ -9,6 +9,7 @@ import { Badge } from "../components/core/Badge";
 import { Icon } from "../components/core/Icon";
 import { Input } from "../components/forms/Input";
 import { Dialog } from "../components/feedback/Dialog";
+import { PanelSkeleton, TableSkeleton } from "../components/feedback/Skeleton";
 import { SideNav } from "../components/navigation/SideNav";
 import { validateCreateBusinessForm, validatePinFormat, splitFieldErrors, type CreateBusinessFieldErrors } from "../lib/validation";
 
@@ -75,7 +76,7 @@ export default function AdminPage() {
 
   const handleLogout = () => { logout(); router.replace("/admin/login"); };
 
-  if (authLoading || !user) return null;
+  if (authLoading || !user) return <PanelSkeleton navItems={2} />;
 
   const businesses = bizData?.businesses || bizData || [];
   const list = Array.isArray(businesses) ? businesses : [];
@@ -128,7 +129,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {bizLoading ? <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading...</div> : (
+      {bizLoading ? <TableSkeleton rows={6} columns={4} /> : (
         <Card pad={0} elevation={1}>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr", padding: "14px 20px", borderBottom: "var(--border)", background: "var(--paper-200)" }}>
             {["Business", "Plan", "Customers", "Status", "Actions"].map((h) => (

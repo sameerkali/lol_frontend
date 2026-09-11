@@ -22,6 +22,7 @@ import { Select } from "../components/forms/Select";
 import { StatTile } from "../components/loyalty/StatTile";
 import { SideNav } from "../components/navigation/SideNav";
 import { Dialog } from "../components/feedback/Dialog";
+import { PanelSkeleton, TableSkeleton, SkeletonStatRow, Skeleton } from "../components/feedback/Skeleton";
 import { splitFieldErrors } from "../lib/validation";
 import {
   EarningSection,
@@ -107,6 +108,7 @@ export default function BusinessPanel() {
   const [customerSearch, setCustomerSearch] = React.useState("");
   const [customerSort, setCustomerSort] = React.useState("newest");
   const [onlyUnredeemed, setOnlyUnredeemed] = React.useState(false);
+  const [customerTier, setCustomerTier] = React.useState("");
 
   React.useEffect(() => {
     if (!authLoading && !user) router.replace("/business/login");
@@ -118,9 +120,11 @@ export default function BusinessPanel() {
     const p: Record<string, string> = { sort: customerSort };
     if (customerSearch.trim()) p.phone = customerSearch.trim();
     if (onlyUnredeemed) p.hasUnredeemedRewards = "true";
+    if (customerTier) p.tier = customerTier;
     return p;
-  }, [customerSearch, customerSort, onlyUnredeemed]);
+  }, [customerSearch, customerSort, onlyUnredeemed, customerTier]);
   const { data: custData, isLoading: custLoading } = useBusinessCustomers(customerParams);
+  const { data: birthdayData } = useBusinessCustomers({ birthdayToday: "true", limit: "10" });
   const { data: qr } = useBusinessQr();
 
   const updateMut = useUpdateBusinessSettings();
@@ -129,14 +133,19 @@ export default function BusinessPanel() {
 
   const handleLogout = () => { logout(); router.replace("/business/login"); };
 
-  if (authLoading || !user) return null;
+  if (authLoading || !user) return <PanelSkeleton navItems={5} />;
 
   const b = me || {};
   const customers = custData?.customers || custData || [];
   const list = Array.isArray(customers) ? customers : [];
+  const birthdaysToday = birthdayData?.customers || birthdayData || [];
+  const birthdayList = Array.isArray(birthdaysToday) ? birthdaysToday : [];
+  const allTierNames: string[] = Array.from(
+    new Set([...(b.tiers || []).map((t: any) => t.name), ...list.map((c: any) => c.ruleSnapshot?.tierName).filter(Boolean)])
+  );
 
-  const savePin = async (pin: string, currentPin?: string) => {
-    await pinMut.mutateAsync({ pin, currentPin });
+  const savePin = async (pin: string) => {
+    await pinMut.mutateAsync({ pin });
   };
   const pinFieldError = (() => {
     if (!pinMut.isError) return "";
@@ -170,13 +179,35 @@ export default function BusinessPanel() {
   const Dashboard = (
     <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28 }}>
       <SectionHeader eyebrow="Dashboard" title={b.name || "..."} />
-      {dash && (
+      {dash ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
           <StatTile label="Total customers" value={dash.totalCustomers ?? list.length} icon="users" tone="grape" />
           <StatTile label="Visits (30d)" value={dash.visits ?? 0} icon="stamp" tone="mint" />
           <StatTile label="Redemptions (30d)" value={dash.redemptions ?? 0} icon="gift" tone="sun" />
           <StatTile label="Repeat visit rate" value={dash.repeatVisitRate != null ? `${dash.repeatVisitRate}%` : "—"} icon="trending-up" tone="sky" />
         </div>
+      ) : (
+        <SkeletonStatRow />
+      )}
+
+      {birthdayList.length > 0 && (
+        <Card tone="sun" pad={20} elevation={1}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <Icon name="cake" size={20} color="var(--sun-700)" />
+            <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Birthdays today 🎉</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {birthdayList.map((c: any, i: number) => (
+              <div key={c._id || i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < birthdayList.length - 1 ? "var(--border-hair)" : "none" }}>
+                <span style={{ font: "600 14px/1.3 var(--font-body)", color: "var(--text-strong)" }}>{c.name || c.phone}</span>
+                <span style={{ font: "var(--type-mono)", color: "var(--text-muted)", fontSize: 13 }}>{c.phone}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", marginTop: 12 }}>
+            Give them a shout when they visit — a free treat or a discount goes a long way.
+          </div>
+        </Card>
       )}
 
       <Card pad={20}>
@@ -205,7 +236,7 @@ export default function BusinessPanel() {
         </div>
       </Card>
 
-      {meLoading ? <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading...</div> : (
+      {meLoading ? <TableSkeleton rows={4} columns={2} /> : (
         <Card pad={24}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <div style={{ font: "var(--type-subtitle)", letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>Recent customers</div>
@@ -236,7 +267,7 @@ export default function BusinessPanel() {
     <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28 }}>
       <SectionHeader eyebrow="Milestones" title="Reward ladder" />
       {meLoading ? (
-        <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading...</div>
+        <Skeleton height={320} radius="var(--radius-lg)" />
       ) : (
         <MilestonesSection business={b} onSave={(patch) => updateMut.mutateAsync(patch)} saving={updateMut.isPending} key={b.updatedAt} />
       )}
@@ -267,12 +298,20 @@ export default function BusinessPanel() {
           { value: "visits", label: "Most visits" },
           { value: "lastVisit", label: "Last visit" },
         ]} style={{ width: 190 }} />
+        {allTierNames.length > 0 && (
+          <Select
+            value={customerTier}
+            onChange={setCustomerTier}
+            options={[{ value: "", label: "All tiers" }, ...allTierNames.map((t) => ({ value: t, label: t }))]}
+            style={{ width: 170 }}
+          />
+        )}
         <label style={{ display: "flex", alignItems: "center", gap: 8, font: "var(--type-body-sm)", color: "var(--text-body)", cursor: "pointer" }}>
           <input type="checkbox" checked={onlyUnredeemed} onChange={(e) => setOnlyUnredeemed(e.target.checked)} />
           Unredeemed rewards only
         </label>
       </div>
-      {custLoading ? <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading...</div> : (
+      {custLoading ? <TableSkeleton rows={6} columns={5} /> : (
         <Card pad={0} elevation={1}>
           <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.3fr 0.8fr 0.8fr 1fr 1fr", padding: "14px 20px", borderBottom: "var(--border)", background: "var(--paper-200)" }}>
             {["Name", "Phone", "Visits", "Points", "Tier", "Last visit"].map((h) => (
@@ -325,7 +364,7 @@ export default function BusinessPanel() {
         ))}
       </div>
       {meLoading ? (
-        <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading...</div>
+        <Skeleton height={320} radius="var(--radius-lg)" />
       ) : (
         <>
           {settingsTab === "general" && (
@@ -341,7 +380,6 @@ export default function BusinessPanel() {
             <PinSection
               pin={b.pin}
               hasPin={!!b.pin}
-              requireCurrentPin
               onSave={savePin}
               saving={pinMut.isPending}
               error={pinFieldError}

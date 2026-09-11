@@ -17,6 +17,7 @@ import { Icon } from "../components/core/Icon";
 import { Input } from "../components/forms/Input";
 import { Select } from "../components/forms/Select";
 import { Dialog } from "../components/feedback/Dialog";
+import { Skeleton } from "../components/feedback/Skeleton";
 import {
   EarningSection,
   MilestonesSection,
@@ -93,7 +94,15 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
   const statusMut = usePatchBusinessStatus();
   const deleteMut = useDeleteBusiness();
 
-  if (authLoading || !user) return null;
+  if (authLoading || !user) {
+    return (
+      <div style={{ minHeight: "100vh", background: "var(--surface-page)", padding: 32 }}>
+        <div style={{ maxWidth: 960, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
+          <Skeleton width={140} height={26} />
+        </div>
+      </div>
+    );
+  }
 
   const save = (patch: any) => updateMut.mutateAsync({ id, ...patch });
 
@@ -120,7 +129,21 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
         </button>
 
         {isLoading || !business ? (
-          <div style={{ padding: 60, textAlign: "center", color: "var(--text-muted)" }}>Loading business...</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <Skeleton width={260} height={30} />
+                <Skeleton width={200} height={14} />
+              </div>
+              <Skeleton width={160} height={48} radius="var(--radius-md)" />
+            </div>
+            <div style={{ display: "flex", gap: 12 }}>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} width={110} height={38} radius="var(--radius-pill)" />
+              ))}
+            </div>
+            <Skeleton height={280} radius="var(--radius-lg)" />
+          </div>
         ) : (
           <>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
@@ -215,7 +238,7 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
                       </div>
                     </>
                   ) : (
-                    <div style={{ color: "var(--text-muted)" }}>Loading...</div>
+                    <Skeleton width={200} height={200} />
                   )}
                 </div>
               </Card>

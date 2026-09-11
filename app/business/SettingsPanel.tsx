@@ -4,8 +4,40 @@ import { Button } from "../components/core/Button";
 import { Card } from "../components/core/Card";
 import { Icon } from "../components/core/Icon";
 import { Input } from "../components/forms/Input";
+import { NumberInput } from "../components/forms/NumberInput";
 import { Select } from "../components/forms/Select";
 import { Switch } from "../components/forms/Switch";
+
+export const LIMITS = {
+  amountPerPoint: { min: 1, max: 100000 },
+  minBillAmount: { min: 0, max: 1000000 },
+  stampLimitPerDay: { min: 1, max: 50 },
+  lapsedAfterDays: { min: 1, max: 3650 },
+  headStartStamps: { min: 0, max: 100 },
+  milestoneCount: { min: 1, max: 100000 },
+  percentOff: { min: 1, max: 100 },
+  flatOff: { min: 1, max: 1000000 },
+};
+
+const DEFAULT_TIER_LADDER = [
+  { name: "Bronze", count: 5 },
+  { name: "Silver", count: 8 },
+  { name: "Gold", count: 12 },
+  { name: "Platinum", count: 16 },
+  { name: "Diamond", count: 20 },
+  { name: "Sapphire", count: 25 },
+  { name: "Ruby", count: 30 },
+  { name: "Emerald", count: 36 },
+  { name: "Master", count: 42 },
+  { name: "Legend", count: 50 },
+];
+
+export function generateDefaultTiers() {
+  return DEFAULT_TIER_LADDER.map((t) => ({
+    name: t.name,
+    milestones: [{ count: t.count, rewardType: "custom", rewardValue: "", label: `Reach ${t.name}` }],
+  }));
+}
 
 export const REWARD_TYPE_OPTIONS = [
   { value: "free_item", label: "Free item" },
@@ -41,6 +73,45 @@ function emptyMilestone() {
   return { count: 1, rewardType: "custom", rewardValue: "", label: "" };
 }
 
+interface MilestoneRowErrors {
+  count?: string;
+  rewardValue?: string;
+  label?: string;
+}
+
+export function validateMilestoneRow(m: any): MilestoneRowErrors {
+  const errors: MilestoneRowErrors = {};
+  const count = Number(m.count);
+  if (!m.count && m.count !== 0) errors.count = "Required";
+  else if (!Number.isInteger(count) || count < LIMITS.milestoneCount.min) errors.count = `Min ${LIMITS.milestoneCount.min}`;
+  else if (count > LIMITS.milestoneCount.max) errors.count = `Max ${LIMITS.milestoneCount.max}`;
+
+  if (!m.label || !m.label.trim()) errors.label = "Required";
+
+  if (m.rewardType === "percent_off") {
+    const n = Number(m.rewardValue);
+    if (m.rewardValue === "" || m.rewardValue == null || Number.isNaN(n)) errors.rewardValue = "Required";
+    else if (n < LIMITS.percentOff.min || n > LIMITS.percentOff.max) errors.rewardValue = `${LIMITS.percentOff.min}–${LIMITS.percentOff.max}`;
+  } else if (m.rewardType === "flat_off") {
+    const n = Number(m.rewardValue);
+    if (m.rewardValue === "" || m.rewardValue == null || Number.isNaN(n)) errors.rewardValue = "Required";
+    else if (n < LIMITS.flatOff.min) errors.rewardValue = `Min ${LIMITS.flatOff.min}`;
+    else if (n > LIMITS.flatOff.max) errors.rewardValue = `Max ${LIMITS.flatOff.max}`;
+  } else if (!m.rewardValue || !String(m.rewardValue).trim()) {
+    errors.rewardValue = "Required";
+  }
+
+  return errors;
+}
+
+export function hasMilestoneErrors(milestones: any[]): boolean {
+  return milestones.length === 0 || milestones.some((m) => Object.keys(validateMilestoneRow(m)).length > 0);
+}
+
+export function hasTierErrors(tiers: any[]): boolean {
+  return tiers.length === 0 || tiers.some((t) => !t.name?.trim() || hasMilestoneErrors(t.milestones || []));
+}
+
 const trashBtnStyle: React.CSSProperties = {
   width: 40,
   height: 40,
@@ -67,53 +138,82 @@ export function MilestoneListEditor({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {milestones.map((m, i) => (
-        <div
-          key={m._id || i}
-          style={{
-            display: "flex",
-            gap: 10,
-            alignItems: "flex-end",
-            padding: 14,
-            background: "var(--surface-sunk)",
-            borderRadius: "var(--radius-md)",
-            border: "var(--border-hair)",
-            flexWrap: "wrap",
-          }}
-        >
-          <Input
-            label="Count"
-            mono
-            value={String(m.count ?? "")}
-            onChange={(v) => update(i, { count: Number(v.replace(/\D/g, "")) || 0 })}
-            style={{ width: 90 }}
-          />
-          <Select
-            label="Reward"
-            value={m.rewardType}
-            onChange={(v) => update(i, { rewardType: v })}
-            options={REWARD_TYPE_OPTIONS}
-            style={{ width: 190 }}
-          />
-          <Input
-            label="Value"
-            value={m.rewardValue || ""}
-            onChange={(v) => update(i, { rewardValue: v })}
-            placeholder={rewardPlaceholder(m.rewardType)}
-            style={{ width: 140 }}
-          />
-          <Input
-            label="Label shown to customer"
-            value={m.label || ""}
-            onChange={(v) => update(i, { label: v })}
-            placeholder={`e.g. ${m.count || 5} visits`}
-            style={{ flex: 1, minWidth: 160 }}
-          />
-          <button type="button" onClick={() => remove(i)} style={trashBtnStyle} aria-label="Remove milestone">
-            <Icon name="trash-2" size={16} />
-          </button>
-        </div>
-      ))}
+      {milestones.map((m, i) => {
+        const rowErrors = validateMilestoneRow(m);
+        return (
+          <div
+            key={m._id || i}
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "flex-start",
+              padding: 14,
+              background: "var(--surface-sunk)",
+              borderRadius: "var(--radius-md)",
+              border: "var(--border-hair)",
+              flexWrap: "wrap",
+            }}
+          >
+            <NumberInput
+              label="Count"
+              value={m.count ?? ""}
+              onChange={(v) => update(i, { count: v })}
+              min={LIMITS.milestoneCount.min}
+              max={LIMITS.milestoneCount.max}
+              error={rowErrors.count}
+              style={{ width: 100 }}
+            />
+            <Select
+              label="Reward"
+              value={m.rewardType}
+              onChange={(v) => update(i, { rewardType: v, rewardValue: "" })}
+              options={REWARD_TYPE_OPTIONS}
+              style={{ width: 190 }}
+            />
+            {m.rewardType === "percent_off" ? (
+              <NumberInput
+                label="Value (%)"
+                value={m.rewardValue === "" ? "" : Number(m.rewardValue)}
+                onChange={(v) => update(i, { rewardValue: v === "" ? "" : String(v) })}
+                min={LIMITS.percentOff.min}
+                max={LIMITS.percentOff.max}
+                error={rowErrors.rewardValue}
+                style={{ width: 140 }}
+              />
+            ) : m.rewardType === "flat_off" ? (
+              <NumberInput
+                label="Value (₹)"
+                value={m.rewardValue === "" ? "" : Number(m.rewardValue)}
+                onChange={(v) => update(i, { rewardValue: v === "" ? "" : String(v) })}
+                min={LIMITS.flatOff.min}
+                max={LIMITS.flatOff.max}
+                error={rowErrors.rewardValue}
+                style={{ width: 140 }}
+              />
+            ) : (
+              <Input
+                label="Value"
+                value={m.rewardValue || ""}
+                onChange={(v) => update(i, { rewardValue: v })}
+                placeholder={rewardPlaceholder(m.rewardType)}
+                error={rowErrors.rewardValue}
+                style={{ width: 160 }}
+              />
+            )}
+            <Input
+              label="Label shown to customer"
+              value={m.label || ""}
+              onChange={(v) => update(i, { label: v })}
+              placeholder={`e.g. ${m.count || 5} visits`}
+              error={rowErrors.label}
+              style={{ flex: 1, minWidth: 160 }}
+            />
+            <button type="button" onClick={() => remove(i)} style={{ ...trashBtnStyle, marginTop: 30 }} aria-label="Remove milestone">
+              <Icon name="trash-2" size={16} />
+            </button>
+          </div>
+        );
+      })}
       {milestones.length === 0 && (
         <div style={{ padding: 20, textAlign: "center", color: "var(--text-muted)", font: "var(--type-body-sm)" }}>
           No milestones yet — add one below.
@@ -131,13 +231,39 @@ export function TiersEditor({ tiers, onChange }: { tiers: any[]; onChange: (t: a
   const remove = (i: number) => onChange(tiers.filter((_, idx) => idx !== i));
   const add = () => onChange([...tiers, { name: `Tier ${tiers.length + 1}`, milestones: [emptyMilestone()] }]);
 
+  if (tiers.length === 0) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "flex-start" }}>
+        <div style={{ padding: 20, background: "var(--surface-sunk)", borderRadius: "var(--radius-md)", font: "var(--type-body-sm)", color: "var(--text-muted)" }}>
+          No tiers yet — a customer can&apos;t be promoted without at least one. Start from a ready-made 10-level ladder
+          (Bronze → Legend) and edit the names, milestone counts and rewards to fit, or add tiers one at a time.
+        </div>
+        <div style={{ display: "flex", gap: 12 }}>
+          <Button variant="primary" size="sm" icon={<Icon name="crown" size={16} />} onClick={() => onChange(generateDefaultTiers())}>
+            Set up 10 tiers
+          </Button>
+          <Button variant="secondary" size="sm" icon={<Icon name="plus" size={16} />} onClick={add}>
+            Add one tier
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {tiers.map((t, i) => (
         <Card key={t._id || i} tone="sunk" pad={16} elevation={0}>
           <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 14 }}>
+            <span style={{ font: "700 13px/1 var(--font-mono)", color: "var(--text-muted)", width: 24 }}>{i + 1}</span>
             <Icon name="crown" size={18} color="var(--sun-700)" />
-            <Input value={t.name || ""} onChange={(v) => update(i, { name: v })} placeholder="Tier name (e.g. Gold)" style={{ flex: 1 }} />
+            <Input
+              value={t.name || ""}
+              onChange={(v) => update(i, { name: v })}
+              placeholder="Tier name (e.g. Gold)"
+              error={!t.name?.trim() ? "Required" : undefined}
+              style={{ flex: 1 }}
+            />
             <button type="button" onClick={() => remove(i)} style={trashBtnStyle} aria-label="Remove tier">
               <Icon name="trash-2" size={16} />
             </button>
@@ -182,23 +308,37 @@ export function EarningSection({
   saving?: boolean;
 }) {
   const [earningMode, setEarningMode] = React.useState(business.earningMode || "visits");
-  const [amountPerPoint, setAmountPerPoint] = React.useState(String(business.amountPerPoint ?? 100));
-  const [minBillAmount, setMinBillAmount] = React.useState(String(business.minBillAmount ?? 0));
+  const [amountPerPoint, setAmountPerPoint] = React.useState<number | "">(business.amountPerPoint ?? 100);
+  const [minBillAmount, setMinBillAmount] = React.useState<number | "">(business.minBillAmount ?? 0);
   const [checkInMode, setCheckInMode] = React.useState(business.checkInMode || "automatic");
   const [billAmountFieldEnabled, setBillAmountFieldEnabled] = React.useState(!!business.billAmountFieldEnabled);
-  const [stampLimitPerDay, setStampLimitPerDay] = React.useState(String(business.stampLimitPerDay ?? 1));
-  const [lapsedAfterDays, setLapsedAfterDays] = React.useState(String(business.lapsedAfterDays ?? 30));
+  const [stampLimitPerDay, setStampLimitPerDay] = React.useState<number | "">(business.stampLimitPerDay ?? 1);
+  const [lapsedAfterDays, setLapsedAfterDays] = React.useState<number | "">(business.lapsedAfterDays ?? 30);
   const [saved, flash] = useSavedFlag();
 
+  const amountPerPointError =
+    earningMode === "bill_amount"
+      ? amountPerPoint === "" ? "Required" : amountPerPoint < LIMITS.amountPerPoint.min ? `Min ${LIMITS.amountPerPoint.min}` : amountPerPoint > LIMITS.amountPerPoint.max ? `Max ${LIMITS.amountPerPoint.max}` : undefined
+      : undefined;
+  const minBillAmountError =
+    earningMode === "visits_with_min_bill"
+      ? minBillAmount === "" ? "Required" : minBillAmount < LIMITS.minBillAmount.min ? `Min ${LIMITS.minBillAmount.min}` : minBillAmount > LIMITS.minBillAmount.max ? `Max ${LIMITS.minBillAmount.max}` : undefined
+      : undefined;
+  const stampLimitError = stampLimitPerDay === "" ? "Required" : stampLimitPerDay < LIMITS.stampLimitPerDay.min ? `Min ${LIMITS.stampLimitPerDay.min}` : stampLimitPerDay > LIMITS.stampLimitPerDay.max ? `Max ${LIMITS.stampLimitPerDay.max}` : undefined;
+  const lapsedError = lapsedAfterDays === "" ? "Required" : lapsedAfterDays < LIMITS.lapsedAfterDays.min ? `Min ${LIMITS.lapsedAfterDays.min}` : lapsedAfterDays > LIMITS.lapsedAfterDays.max ? `Max ${LIMITS.lapsedAfterDays.max}` : undefined;
+
+  const invalid = !!(amountPerPointError || minBillAmountError || stampLimitError || lapsedError);
+
   const save = async () => {
+    if (invalid) return;
     await onSave({
       earningMode,
-      amountPerPoint: Number(amountPerPoint) || 1,
-      minBillAmount: Number(minBillAmount) || 0,
+      amountPerPoint: amountPerPoint === "" ? LIMITS.amountPerPoint.min : amountPerPoint,
+      minBillAmount: minBillAmount === "" ? 0 : minBillAmount,
       checkInMode,
       billAmountFieldEnabled,
-      stampLimitPerDay: Math.max(1, Number(stampLimitPerDay) || 1),
-      lapsedAfterDays: Math.max(1, Number(lapsedAfterDays) || 30),
+      stampLimitPerDay: stampLimitPerDay === "" ? 1 : stampLimitPerDay,
+      lapsedAfterDays: lapsedAfterDays === "" ? 30 : lapsedAfterDays,
     });
     flash();
   };
@@ -210,22 +350,26 @@ export function EarningSection({
         <Select label="How customers earn stamps" value={earningMode} onChange={setEarningMode} options={EARNING_MODE_OPTIONS} />
 
         {earningMode === "bill_amount" && (
-          <Input
+          <NumberInput
             label="₹ per point"
-            mono
             value={amountPerPoint}
             onChange={setAmountPerPoint}
-            hint="e.g. 200 means every ₹200 spent earns 1 point."
+            min={LIMITS.amountPerPoint.min}
+            max={LIMITS.amountPerPoint.max}
+            error={amountPerPointError}
+            hint={!amountPerPointError ? "e.g. 200 means every ₹200 spent earns 1 point." : undefined}
             style={{ maxWidth: 220 }}
           />
         )}
         {earningMode === "visits_with_min_bill" && (
-          <Input
+          <NumberInput
             label="Minimum bill amount (₹)"
-            mono
             value={minBillAmount}
             onChange={setMinBillAmount}
-            hint="A visit only counts if the bill is at least this much."
+            min={LIMITS.minBillAmount.min}
+            max={LIMITS.minBillAmount.max}
+            error={minBillAmountError}
+            hint={!minBillAmountError ? "A visit only counts if the bill is at least this much." : undefined}
             style={{ maxWidth: 220 }}
           />
         )}
@@ -241,23 +385,27 @@ export function EarningSection({
 
         <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Check-in</div>
         <Select label="Visit confirmation" value={checkInMode} onChange={setCheckInMode} options={CHECK_IN_MODE_OPTIONS} />
-        <Input
+        <NumberInput
           label="Stamp limit per day (per phone number)"
-          mono
           value={stampLimitPerDay}
           onChange={setStampLimitPerDay}
+          min={LIMITS.stampLimitPerDay.min}
+          max={LIMITS.stampLimitPerDay.max}
+          error={stampLimitError}
           style={{ maxWidth: 220 }}
         />
-        <Input
+        <NumberInput
           label="Mark customer lapsed after (days)"
-          mono
           value={lapsedAfterDays}
           onChange={setLapsedAfterDays}
+          min={LIMITS.lapsedAfterDays.min}
+          max={LIMITS.lapsedAfterDays.max}
+          error={lapsedError}
           style={{ maxWidth: 220 }}
         />
 
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 8 }}>
-          <Button variant="primary" size="sm" onClick={save} disabled={saving}>
+          <Button variant="primary" size="sm" onClick={save} disabled={saving || invalid}>
             {saving ? "Saving..." : "Save changes"}
           </Button>
           <SavedNote show={saved} />
