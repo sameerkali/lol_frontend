@@ -35,7 +35,7 @@ const DEFAULT_TIER_LADDER = [
 export function generateDefaultTiers() {
   return DEFAULT_TIER_LADDER.map((t) => ({
     name: t.name,
-    milestones: [{ count: t.count, rewardType: "custom", rewardValue: "", label: `Reach ${t.name}` }],
+    milestones: [{ count: t.count, rewardType: "custom", rewardValue: `${t.name} perk`, label: `Reach ${t.name}` }],
   }));
 }
 
@@ -431,7 +431,10 @@ export function MilestonesSection({
   const [tiers, setTiers] = React.useState(business.tiers || []);
   const [saved, flash] = useSavedFlag();
 
+  const invalid = afterFinalMilestone === "reset" ? hasMilestoneErrors(milestones) : hasTierErrors(tiers);
+
   const save = async () => {
+    if (invalid) return;
     await onSave({ afterFinalMilestone, milestones, tiers });
     flash();
   };
@@ -467,17 +470,23 @@ export function MilestonesSection({
             <>
               <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Tiers</div>
               <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>
-                Each tier has its own milestone ladder. Customers advance to the next tier after finishing the current one.
+                Customers get their first tier as soon as they sign up, and get promoted to the next one every time they
+                finish the current tier&apos;s milestone ladder — right up to your top tier.
               </div>
               <TiersEditor tiers={tiers} onChange={setTiers} />
             </>
           )}
 
           <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 8 }}>
-            <Button variant="primary" size="sm" onClick={save} disabled={saving}>
+            <Button variant="primary" size="sm" onClick={save} disabled={saving || invalid}>
               {saving ? "Saving..." : "Save milestones"}
             </Button>
             <SavedNote show={saved} />
+            {invalid && (
+              <span style={{ font: "600 13px/1.3 var(--font-body)", color: "var(--danger-ink)" }}>
+                Fix the highlighted fields before saving.
+              </span>
+            )}
           </div>
         </div>
       </Card>
@@ -500,23 +509,19 @@ export function SignupRewardsSection({
     business.signupFields || { name: false, email: false, birthday: false }
   );
   const [headStartEnabled, setHeadStartEnabled] = React.useState(!!business.headStart?.enabled);
-  const [headStartStamps, setHeadStartStamps] = React.useState(String(business.headStart?.stamps ?? 0));
-  const [birthdayEnabled, setBirthdayEnabled] = React.useState(!!business.birthdayReward?.enabled);
-  const [birthdayRewardType, setBirthdayRewardType] = React.useState(business.birthdayReward?.rewardType || "custom");
-  const [birthdayRewardValue, setBirthdayRewardValue] = React.useState(business.birthdayReward?.rewardValue || "");
-  const [birthdayLabel, setBirthdayLabel] = React.useState(business.birthdayReward?.label || "");
+  const [headStartStamps, setHeadStartStamps] = React.useState<number | "">(business.headStart?.stamps ?? 0);
   const [saved, flash] = useSavedFlag();
 
+  const headStartError = headStartEnabled
+    ? headStartStamps === "" ? "Required" : headStartStamps < LIMITS.headStartStamps.min ? `Min ${LIMITS.headStartStamps.min}` : headStartStamps > LIMITS.headStartStamps.max ? `Max ${LIMITS.headStartStamps.max}` : undefined
+    : undefined;
+  const invalid = !!headStartError;
+
   const save = async () => {
+    if (invalid) return;
     await onSave({
       signupFields,
-      headStart: { enabled: headStartEnabled, stamps: Math.max(0, Number(headStartStamps) || 0) },
-      birthdayReward: {
-        enabled: birthdayEnabled,
-        rewardType: birthdayRewardType,
-        rewardValue: birthdayRewardValue,
-        label: birthdayLabel,
-      },
+      headStart: { enabled: headStartEnabled, stamps: headStartStamps === "" ? 0 : headStartStamps },
     });
     flash();
   };
@@ -528,7 +533,12 @@ export function SignupRewardsSection({
         <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>Phone number is always collected.</div>
         <Switch checked={!!signupFields.name} onChange={(v) => setSignupFields({ ...signupFields, name: v })} label="Name" />
         <Switch checked={!!signupFields.email} onChange={(v) => setSignupFields({ ...signupFields, email: v })} label="Email" />
-        <Switch checked={!!signupFields.birthday} onChange={(v) => setSignupFields({ ...signupFields, birthday: v })} label="Birthday" />
+        <Switch
+          checked={!!signupFields.birthday}
+          onChange={(v) => setSignupFields({ ...signupFields, birthday: v })}
+          label="Birthday"
+          hint="We'll flag today's birthdays on your dashboard so you know who to treat."
+        />
 
         <hr style={{ border: 0, borderTop: "var(--border-hair)", margin: "4px 0" }} />
 
@@ -540,29 +550,19 @@ export function SignupRewardsSection({
           hint="Award stamps immediately on signup."
         />
         {headStartEnabled && (
-          <Input label="Head-start stamps" mono value={headStartStamps} onChange={setHeadStartStamps} style={{ maxWidth: 160 }} />
-        )}
-
-        <hr style={{ border: 0, borderTop: "var(--border-hair)", margin: "4px 0" }} />
-
-        <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Birthday reward</div>
-        <Switch
-          checked={birthdayEnabled}
-          onChange={setBirthdayEnabled}
-          disabled={!signupFields.birthday}
-          label="Send a birthday reward"
-          hint={!signupFields.birthday ? "Turn on the birthday signup field first." : undefined}
-        />
-        {birthdayEnabled && signupFields.birthday && (
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Select label="Reward type" value={birthdayRewardType} onChange={setBirthdayRewardType} options={REWARD_TYPE_OPTIONS} style={{ width: 190 }} />
-            <Input label="Value" value={birthdayRewardValue} onChange={setBirthdayRewardValue} placeholder={rewardPlaceholder(birthdayRewardType)} style={{ width: 140 }} />
-            <Input label="Label" value={birthdayLabel} onChange={setBirthdayLabel} placeholder="e.g. Birthday treat" style={{ flex: 1, minWidth: 160 }} />
-          </div>
+          <NumberInput
+            label="Head-start stamps"
+            value={headStartStamps}
+            onChange={setHeadStartStamps}
+            min={LIMITS.headStartStamps.min}
+            max={LIMITS.headStartStamps.max}
+            error={headStartError}
+            style={{ maxWidth: 180 }}
+          />
         )}
 
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 8 }}>
-          <Button variant="primary" size="sm" onClick={save} disabled={saving}>
+          <Button variant="primary" size="sm" onClick={save} disabled={saving || invalid}>
             {saving ? "Saving..." : "Save changes"}
           </Button>
           <SavedNote show={saved} />
@@ -587,12 +587,18 @@ export function BrandingSection({
   const [secondaryColor, setSecondaryColor] = React.useState(branding?.secondaryColor || "#F59E0B");
   const [saved, flash] = useSavedFlag();
 
+  const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+  const primaryError = HEX_RE.test(primaryColor) ? undefined : "Must be a hex color, e.g. #111827";
+  const secondaryError = HEX_RE.test(secondaryColor) ? undefined : "Must be a hex color, e.g. #F59E0B";
+  const invalid = !!(primaryError || secondaryError);
+
   const save = async () => {
+    if (invalid) return;
     await onSave({ primaryColor, secondaryColor });
     flash();
   };
 
-  const colorRow = (label: string, value: string, onChange: (v: string) => void) => (
+  const colorRow = (label: string, value: string, onChange: (v: string) => void, error?: string) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <label style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)" }}>
         {label}
@@ -600,11 +606,11 @@ export function BrandingSection({
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <input
           type="color"
-          value={/^#([0-9a-f]{3}){1,2}$/i.test(value) ? value : "#111827"}
+          value={HEX_RE.test(value) ? value : "#111827"}
           onChange={(e) => onChange(e.target.value)}
           style={{ width: 56, height: 56, border: "var(--border)", borderRadius: "var(--radius-sm)", padding: 2, background: "var(--paper-000)", cursor: "pointer" }}
         />
-        <Input value={value} onChange={onChange} mono style={{ width: 160 }} />
+        <Input value={value} onChange={onChange} mono error={error} style={{ width: 160 }} />
       </div>
     </div>
   );
@@ -615,11 +621,11 @@ export function BrandingSection({
         <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Branding</div>
         <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>Colors shown on your customer-facing loyalty page.</div>
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-          {colorRow("Primary color", primaryColor, setPrimaryColor)}
-          {colorRow("Secondary color", secondaryColor, setSecondaryColor)}
+          {colorRow("Primary color", primaryColor, setPrimaryColor, primaryError)}
+          {colorRow("Secondary color", secondaryColor, setSecondaryColor, secondaryError)}
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <Button variant="primary" size="sm" onClick={save} disabled={saving}>
+          <Button variant="primary" size="sm" onClick={save} disabled={saving || invalid}>
             {saving ? "Saving..." : "Save branding"}
           </Button>
           <SavedNote show={saved} />
@@ -634,20 +640,17 @@ export function BrandingSection({
 export function PinSection({
   pin,
   hasPin,
-  requireCurrentPin,
   onSave,
   saving,
   error,
 }: {
   pin?: string | null;
   hasPin: boolean;
-  requireCurrentPin: boolean;
-  onSave: (newPin: string, currentPin?: string) => Promise<void>;
+  onSave: (newPin: string) => Promise<void>;
   saving?: boolean;
   error?: string;
 }) {
   const [reveal, setReveal] = React.useState(false);
-  const [currentPin, setCurrentPin] = React.useState("");
   const [newPin, setNewPin] = React.useState("");
   const [localError, setLocalError] = React.useState("");
   const [saved, flash] = useSavedFlag();
@@ -658,9 +661,8 @@ export function PinSection({
       setLocalError("PIN must be 4–6 digits");
       return;
     }
-    await onSave(newPin, currentPin || undefined);
+    await onSave(newPin);
     setNewPin("");
-    setCurrentPin("");
     flash();
   };
 
@@ -704,9 +706,6 @@ export function PinSection({
         <hr style={{ border: 0, borderTop: "var(--border-hair)", margin: "4px 0" }} />
 
         <div style={{ font: "600 15px/1.3 var(--font-body)", color: "var(--text-strong)" }}>Change PIN</div>
-        {requireCurrentPin && hasPin && (
-          <Input label="Current PIN" type="password" mono placeholder="Enter current PIN" value={currentPin} onChange={setCurrentPin} />
-        )}
         <Input
           label="New PIN"
           type="password"

@@ -17,5 +17,7 @@ export function emitToast(text: string, tone: ToastTone = "danger") {
 
 export function subscribeToast(fn: Listener) {
   listeners.add(fn);
-  return () => listeners.delete(fn);
+  return () => {
+    listeners.delete(fn);
+  };
 }

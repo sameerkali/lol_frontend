@@ -204,7 +204,6 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
               <PinSection
                 pin={business.pin}
                 hasPin={!!business.pin}
-                requireCurrentPin={false}
                 onSave={(pin) => save({ pin })}
                 saving={updateMut.isPending}
                 key={`p-${business.updatedAt}`}
