@@ -153,7 +153,7 @@ export function SideNav({ items = [], value, onChange, brand = "lol", footer, st
               {items.map((it) => (
                 <NavButton key={it.value} item={it} active={it.value === value} onClick={() => select(it.value)} />
               ))}
-              <div style={{ borderTop: "var(--border-hair)", marginTop: 8, paddingTop: 12 }}>{footer}</div>
+              <div onClick={() => setOpen(false)} style={{ borderTop: "var(--border-hair)", marginTop: 8, paddingTop: 12 }}>{footer}</div>
             </div>
           </>
         )}

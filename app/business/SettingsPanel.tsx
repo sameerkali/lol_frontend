@@ -11,7 +11,7 @@ import { Switch } from "../components/forms/Switch";
 export const LIMITS = {
   amountPerPoint: { min: 1, max: 100000 },
   minBillAmount: { min: 0, max: 1000000 },
-  stampLimitPerDay: { min: 1, max: 50 },
+  stampLimitPerDay: { min: 0, max: 50 },
   lapsedAfterDays: { min: 1, max: 3650 },
   headStartStamps: { min: 0, max: 100 },
   milestoneCount: { min: 1, max: 100000 },
@@ -392,6 +392,7 @@ export function EarningSection({
           min={LIMITS.stampLimitPerDay.min}
           max={LIMITS.stampLimitPerDay.max}
           error={stampLimitError}
+          hint={!stampLimitError ? "0 = no daily limit." : undefined}
           style={{ maxWidth: 220 }}
         />
         <NumberInput

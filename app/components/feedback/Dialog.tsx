@@ -21,9 +21,9 @@ export function Dialog({
   return (
     <div
       style={{
-        position: "absolute",
+        position: "fixed",
         inset: 0,
-        zIndex: 40,
+        zIndex: 200,
         background: "rgba(27,21,38,0.55)",
         backdropFilter: "blur(3px)",
         display: "grid",

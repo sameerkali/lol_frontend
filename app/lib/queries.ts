@@ -87,12 +87,12 @@ export function useBusinessDashboard(from?: string, to?: string) {
   if (from) params.set("from", from);
   if (to) params.set("to", to);
   const q = params.toString() ? `?${params}` : "";
-  return useQuery({ queryKey: ["business", "dashboard", from, to], queryFn: () => api.get<any>(`/business/dashboard${q}`) });
+  return useQuery({ queryKey: ["business", "dashboard", from, to], queryFn: () => api.get<any>(`/business/dashboard${q}`), refetchInterval: 20_000 });
 }
 
 export function useBusinessCustomers(params?: Record<string, string>) {
   const q = params ? "?" + new URLSearchParams(params).toString() : "";
-  return useQuery({ queryKey: ["business", "customers", params], queryFn: () => api.get<any>(`/business/customers${q}`) });
+  return useQuery({ queryKey: ["business", "customers", params], queryFn: () => api.get<any>(`/business/customers${q}`), refetchInterval: 20_000 });
 }
 
 export function useUpdateBusinessSettings() {

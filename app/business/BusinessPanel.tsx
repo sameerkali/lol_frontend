@@ -190,6 +190,26 @@ export default function BusinessPanel() {
         <SkeletonStatRow />
       )}
 
+      {dash?.tierBreakdown?.length > 0 && (
+        <Card pad={20} elevation={1}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <Icon name="crown" size={20} color="var(--grape-500)" />
+            <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Customers by tier</div>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {dash.tierBreakdown.map((t: any) => (
+              <div
+                key={t.tierName}
+                style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", background: "var(--surface-sunk)", border: "var(--border-hair)", borderRadius: "var(--radius-pill)" }}
+              >
+                <Badge tone="reward" size="sm">{t.tierName}</Badge>
+                <span style={{ font: "700 15px/1 var(--font-mono)", color: "var(--text-strong)" }}>{t.count}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {birthdayList.length > 0 && (
         <Card tone="sun" pad={20} elevation={1}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -297,6 +317,7 @@ export default function BusinessPanel() {
           { value: "newest", label: "Newest first" },
           { value: "visits", label: "Most visits" },
           { value: "lastVisit", label: "Last visit" },
+          ...(allTierNames.length > 0 ? [{ value: "tier", label: "Tier (highest first)" }] : []),
         ]} style={{ width: 190 }} />
         {allTierNames.length > 0 && (
           <Select
