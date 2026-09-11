@@ -3,7 +3,8 @@ import React from "react";
 import { Icon } from "../core/Icon";
 
 export function PinPad({
-  length = 4,
+  minLength = 4,
+  maxLength = 6,
   value = "",
   onChange,
   onComplete,
@@ -11,7 +12,8 @@ export function PinPad({
   title = "Hand the phone to staff",
   subtitle = "Enter the business PIN to confirm.",
 }: {
-  length?: number;
+  minLength?: number;
+  maxLength?: number;
   value?: string;
   onChange?: (v: string) => void;
   onComplete?: (v: string) => void;
@@ -19,14 +21,21 @@ export function PinPad({
   title?: string;
   subtitle?: string;
 }) {
+  // Business PINs are 4-6 digits (owner's choice), so this can't auto-submit
+  // at a fixed length — it submits at maxLength, or when Confirm is tapped.
   const push = (d: string) => {
-    if (value.length >= length) return;
+    if (value.length >= maxLength) return;
     const next = value + d;
     onChange && onChange(next);
-    if (next.length === length && onComplete) onComplete(next);
+    if (next.length === maxLength && onComplete) onComplete(next);
   };
   const back = () => onChange && onChange(value.slice(0, -1));
-  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"];
+  const confirm = () => {
+    if (value.length >= minLength && onComplete) onComplete(value);
+  };
+  const canConfirm = value.length >= minLength && value.length < maxLength;
+  const displayLength = Math.min(Math.max(value.length, minLength), maxLength);
+  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "confirm", "0", "del"];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
@@ -40,7 +49,7 @@ export function PinPad({
       </div>
 
       <div style={{ display: "flex", gap: 12 }}>
-        {Array.from({ length }).map((_, i) => (
+        {Array.from({ length: displayLength }).map((_, i) => (
           <span
             key={i}
             style={{
@@ -71,17 +80,18 @@ export function PinPad({
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 76px)", gap: 12 }}>
         {keys.map((k, i) =>
-          k === "" ? (
+          k === "confirm" && !canConfirm ? (
             <span key={i} />
           ) : (
             <button
               key={i}
-              onClick={() => (k === "del" ? back() : push(k))}
+              onClick={() => (k === "del" ? back() : k === "confirm" ? confirm() : push(k))}
+              disabled={k === "confirm" && !canConfirm}
               style={{
                 height: 64,
                 display: "grid",
                 placeItems: "center",
-                background: k === "del" ? "var(--paper-200)" : "var(--paper-000)",
+                background: k === "del" ? "var(--paper-200)" : k === "confirm" ? "var(--mint-500)" : "var(--paper-000)",
                 border: "var(--border)",
                 borderRadius: "var(--radius-md)",
                 boxShadow: "var(--pop-1)",
@@ -103,7 +113,7 @@ export function PinPad({
                 e.currentTarget.style.boxShadow = "var(--pop-1)";
               }}
             >
-              {k === "del" ? <Icon name="delete" size={22} /> : k}
+              {k === "del" ? <Icon name="delete" size={22} /> : k === "confirm" ? <Icon name="check" size={22} /> : k}
             </button>
           )
         )}

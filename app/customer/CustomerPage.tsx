@@ -8,6 +8,7 @@ import { Icon } from "../components/core/Icon";
 import { Sticker } from "../components/core/Sticker";
 import { PhoneInput } from "../components/forms/PhoneInput";
 import { Input } from "../components/forms/Input";
+import { NumberInput } from "../components/forms/NumberInput";
 import { PinPad } from "../components/forms/PinPad";
 import { StampGrid } from "../components/loyalty/StampGrid";
 import { ProgressBar } from "../components/loyalty/ProgressBar";
@@ -34,6 +35,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [birthdayDate, setBirthdayDate] = React.useState("");
+  const [billAmount, setBillAmount] = React.useState<number | "">("");
   const [pinOpen, setPinOpen] = React.useState(false);
   const [pinMode, setPinMode] = React.useState<string>("visit");
   const [pin, setPin] = React.useState("");
@@ -100,6 +102,8 @@ export default function CustomerPage({ slug }: { slug: string }) {
   const totalTarget = milestones.length ? milestones[milestones.length - 1].count : 15;
   const nextMs = milestones.find((m: any) => m.count > visits) || milestones[milestones.length - 1] || { count: totalTarget, label: "Reward" };
   const unlocked = card?.milestonesUnlocked || [];
+  const needsBillAmount = biz?.earningMode === "bill_amount" || (biz?.earningMode === "visits_with_min_bill" && biz?.billAmountFieldEnabled);
+  const billAmountValid = !needsBillAmount || (billAmount !== "" && billAmount > 0);
 
   const openPin = (mode: string, reward?: any) => {
     setPinMode(mode);
@@ -112,9 +116,14 @@ export default function CustomerPage({ slug }: { slug: string }) {
   const completePin = async (v: string) => {
     if (pinMode === "visit") {
       try {
-        const res = await visitMut.mutateAsync({ phone, pin: biz?.checkInMode === "pin" ? v : undefined });
+        const res = await visitMut.mutateAsync({
+          phone,
+          pin: biz?.checkInMode === "pin" ? v : undefined,
+          billAmount: needsBillAmount && billAmount !== "" ? billAmount : undefined,
+        });
         setPinOpen(false);
         setPin("");
+        setBillAmount("");
         if (res.newlyUnlocked?.length) {
           setCelebrate(res.newlyUnlocked[0]);
         } else {
@@ -321,15 +330,45 @@ export default function CustomerPage({ slug }: { slug: string }) {
         <TopBar title={biz.name} subtitle={biz.location || ""} logo={Logo} right={screen !== "lookup" ? <Badge tone="neutral" size="sm">{visits} visits</Badge> : null} tone={biz.branding?.primaryColor || "var(--grape-500)"} />
         <div ref={contentRef} style={{ flex: 1, overflowY: "auto" }}>{body}</div>
         {screen === "card" && tab === "card" && biz.checkInMode !== "automatic" && (
-          <div style={{ padding: "14px 20px 16px", borderTop: "var(--border)", background: "var(--paper-000)" }}>
-            <Button size="lg" fullWidth icon={<Icon name="hand" size={21} />} onClick={() => openPin("visit")} disabled={visitMut.isPending}>
+          <div style={{ padding: "14px 20px 16px", borderTop: "var(--border)", background: "var(--paper-000)", display: "flex", flexDirection: "column", gap: 10 }}>
+            {needsBillAmount && (
+              <NumberInput
+                prefix="₹"
+                placeholder={biz.earningMode === "visits_with_min_bill" ? `Min ${biz.minBillAmount}` : "Bill amount"}
+                value={billAmount}
+                onChange={setBillAmount}
+                min={0}
+              />
+            )}
+            <Button size="lg" fullWidth icon={<Icon name="hand" size={21} />} onClick={() => openPin("visit")} disabled={visitMut.isPending || !billAmountValid}>
               Mark my visit
             </Button>
           </div>
         )}
         {screen === "card" && biz.checkInMode === "automatic" && (
-          <div style={{ padding: "14px 20px 16px", borderTop: "var(--border)", background: "var(--paper-000)" }}>
-            <Button size="lg" fullWidth icon={<Icon name="hand" size={21} />} onClick={async () => { try { const res = await visitMut.mutateAsync({ phone }); if (res.newlyUnlocked?.length) setCelebrate(res.newlyUnlocked[0]); else showToast(res.note || "Visit marked"); } catch (e: any) { showToast(e.message || "Failed"); } }} disabled={visitMut.isPending}>
+          <div style={{ padding: "14px 20px 16px", borderTop: "var(--border)", background: "var(--paper-000)", display: "flex", flexDirection: "column", gap: 10 }}>
+            {needsBillAmount && (
+              <NumberInput
+                prefix="₹"
+                placeholder={biz.earningMode === "visits_with_min_bill" ? `Min ${biz.minBillAmount}` : "Bill amount"}
+                value={billAmount}
+                onChange={setBillAmount}
+                min={0}
+              />
+            )}
+            <Button
+              size="lg"
+              fullWidth
+              icon={<Icon name="hand" size={21} />}
+              onClick={async () => {
+                try {
+                  const res = await visitMut.mutateAsync({ phone, billAmount: needsBillAmount && billAmount !== "" ? billAmount : undefined });
+                  setBillAmount("");
+                  if (res.newlyUnlocked?.length) setCelebrate(res.newlyUnlocked[0]); else showToast(res.note || "Visit marked");
+                } catch (e: any) { showToast(e.message || "Failed"); }
+              }}
+              disabled={visitMut.isPending || !billAmountValid}
+            >
               Mark my visit
             </Button>
           </div>
