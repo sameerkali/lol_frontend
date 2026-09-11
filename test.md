@@ -86,10 +86,10 @@ Open a business you created above (`/admin/businesses/[id]`) and go through ever
   - [x] Delete a tier → removed from the list; deleting all tiers down to zero blocks Save (tiers mode requires at least one tier).
   - [x] Switch from "next tier" back to "reset" → milestone ladder editor reappears; verify no data loss/corruption switching back and forth before saving. (Also verified switching forward again afterward doesn't crash.)
   - [x] Save tiers, then check the **Customers** tab and **Dashboard** — a newly signed-up customer should show the first tier immediately, and the dashboard's "Customers by tier" widget should reflect real counts. Verified end-to-end: signed up a fresh customer via the public API immediately after saving a new tier config, confirmed `tierName` was assigned instantly (no visit required), and confirmed both the Customers tab and the Dashboard's "Customers by tier" widget reflected it correctly.
-- [ ] **Signup & rewards**:
-  - [ ] Toggle each signup field (name / email / birthday) independently, save, and confirm on the actual customer signup page (`/b/[slug]`) that exactly the enabled fields appear — not more, not fewer.
-  - [ ] Head start: enable it and set a stamp count (0 and a positive number) → a brand-new signup should reflect the head-start stamps immediately on their card, and the customer signup screen should show the "free stamps to start" banner only when `enabled && stamps > 0`.
-  - [ ] Head start stamp count: try a negative number → rejected.
+- [x] **Signup & rewards**:
+  - [x] Toggle each signup field (name / email / birthday) independently, save, and confirm on the actual customer signup page (`/b/[slug]`) that exactly the enabled fields appear — not more, not fewer. Verified mixed (name+birthday only), all-three-on, and all-off cases, including a full signup submission with all three fields filled.
+  - [x] Head start: enable it and set a stamp count (0 and a positive number) → a brand-new signup should reflect the head-start stamps immediately on their card, and the customer signup screen should show the "free stamps to start" banner only when `enabled && stamps > 0`. Confirmed: 0 stamps → no banner; 3 stamps → banner shown and the new card's starting count was exactly 3.
+  - [x] Head start stamp count: try a negative number → rejected.
 - [x] **Branding**:
   - [x] Change primary/secondary color via the hex inputs. Try an invalid hex (`#zzz`, missing `#`, too short) → validation error, Save blocked.
   - [x] Save a valid color pair → the customer page's top bar tone should reflect the new primary color. (Verified via computed style: `#1B1526` → `rgb(27, 21, 38)` header background.)
