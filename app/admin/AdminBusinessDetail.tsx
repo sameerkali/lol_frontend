@@ -87,7 +87,7 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
     if (!authLoading && !user) router.replace("/admin/login");
   }, [user, authLoading, router]);
 
-  const { data: business, isLoading } = useAdminBusiness(id);
+  const { data: business, isLoading, isError } = useAdminBusiness(id);
   const { data: qr } = useAdminBusinessQr(id);
   const updateMut = useUpdateBusiness();
   const planMut = usePatchBusinessPlan();
@@ -128,7 +128,20 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
           <Icon name="arrow-left" size={16} /> Back to businesses
         </button>
 
-        {isLoading || !business ? (
+        {isError ? (
+          <Card pad={40} style={{ textAlign: "center" }}>
+            <Icon name="alert-triangle" size={28} color="var(--coral-700)" />
+            <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)", marginTop: 12 }}>
+              This business couldn&apos;t be loaded
+            </div>
+            <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", marginTop: 6 }}>
+              It may have been deleted, or the link is wrong.
+            </div>
+            <Button variant="secondary" size="sm" onClick={() => router.push("/admin")} style={{ marginTop: 16 }}>
+              Back to businesses
+            </Button>
+          </Card>
+        ) : isLoading || !business ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
