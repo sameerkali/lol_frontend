@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "./lib/Providers";
 
 export const metadata: Metadata = {
-  title: "lol — Digital Stamp Card",
+  title: "Digital Stamp Card",
   description: "A digital stamp card for restaurants and cafes. Tap, stamp, reward.",
 };
 
