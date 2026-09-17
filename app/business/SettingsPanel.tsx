@@ -644,17 +644,16 @@ export function BrandingSection({
 
 export function PinSection({
   pin,
-  hasPin,
   onSave,
   saving,
   error,
 }: {
   pin?: string | null;
-  hasPin: boolean;
   onSave: (newPin: string) => Promise<void>;
   saving?: boolean;
   error?: string;
 }) {
+  const hasPin = !!pin;
   const [reveal, setReveal] = React.useState(false);
   const [newPin, setNewPin] = React.useState("");
   const [localError, setLocalError] = React.useState("");

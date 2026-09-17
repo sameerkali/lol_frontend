@@ -244,7 +244,6 @@ export default function BusinessPanel() {
           {settingsTab === "pin" && (
             <PinSection
               pin={b.pin}
-              hasPin={!!b.pin}
               onSave={savePin}
               saving={pinMut.isPending}
               error={pinFieldError}

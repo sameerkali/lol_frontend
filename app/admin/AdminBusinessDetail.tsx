@@ -277,7 +277,6 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
             {tab === "pin" && (
               <PinSection
                 pin={business.pin}
-                hasPin={!!business.pin}
                 onSave={(pin) => save({ pin })}
                 saving={updateMut.isPending}
                 key={`p-${business.updatedAt}`}
