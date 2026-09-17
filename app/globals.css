@@ -145,10 +145,6 @@
   0%, 100% { transform: rotate(-2deg); }
   50%      { transform: rotate(2deg); }
 }
-@keyframes lol-shine {
-  0%   { background-position: -140% 0; }
-  100% { background-position: 240% 0; }
-}
 @keyframes lol-rise {
   from { transform: translateY(10px); opacity: 0; }
   to   { transform: translateY(0); opacity: 1; }
