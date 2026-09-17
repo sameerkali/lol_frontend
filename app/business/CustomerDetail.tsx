@@ -23,7 +23,7 @@ function toWhatsAppNumber(phone?: string): string {
   return digits;
 }
 
-export function buildWhatsAppLink(phone: string | undefined, message: string): string {
+function buildWhatsAppLink(phone: string | undefined, message: string): string {
   const number = toWhatsAppNumber(phone);
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }

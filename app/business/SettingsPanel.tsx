@@ -8,7 +8,7 @@ import { NumberInput } from "../components/forms/NumberInput";
 import { Select } from "../components/forms/Select";
 import { Switch } from "../components/forms/Switch";
 
-export const LIMITS = {
+const LIMITS = {
   amountPerPoint: { min: 1, max: 100000 },
   minBillAmount: { min: 0, max: 1000000 },
   stampLimitPerDay: { min: 0, max: 50 },
@@ -39,32 +39,32 @@ const DEFAULT_TIER_LADDER = [
   { name: "Legend", count: 50 },
 ];
 
-export function generateDefaultTiers() {
+function generateDefaultTiers() {
   return DEFAULT_TIER_LADDER.map((t) => ({
     name: t.name,
     milestones: [{ count: t.count, rewardType: "custom", rewardValue: `${t.name} perk`, label: `Reach ${t.name}` }],
   }));
 }
 
-export const REWARD_TYPE_OPTIONS = [
+const REWARD_TYPE_OPTIONS = [
   { value: "free_item", label: "Free item" },
   { value: "percent_off", label: "% off the bill" },
   { value: "flat_off", label: "Flat ₹ off" },
   { value: "custom", label: "Custom reward" },
 ];
 
-export const EARNING_MODE_OPTIONS = [
+const EARNING_MODE_OPTIONS = [
   { value: "visits", label: "Visits only — 1 visit = 1 stamp" },
   { value: "bill_amount", label: "Bill amount — points per ₹ spent" },
   { value: "visits_with_min_bill", label: "Visits with a minimum bill" },
 ];
 
-export const CHECK_IN_MODE_OPTIONS = [
+const CHECK_IN_MODE_OPTIONS = [
   { value: "automatic", label: "Automatic — no confirmation needed" },
   { value: "pin", label: "Business PIN — staff confirms every visit" },
 ];
 
-export const AFTER_FINAL_OPTIONS = [
+const AFTER_FINAL_OPTIONS = [
   { value: "reset", label: "Keep the ladder (nothing resets)" },
   { value: "next_tier", label: "Move to the next tier" },
 ];
@@ -86,7 +86,7 @@ interface MilestoneRowErrors {
   label?: string;
 }
 
-export function validateMilestoneRow(m: any): MilestoneRowErrors {
+function validateMilestoneRow(m: any): MilestoneRowErrors {
   const errors: MilestoneRowErrors = {};
   const count = Number(m.count);
   if (!m.count && m.count !== 0) errors.count = "Required";
@@ -111,11 +111,11 @@ export function validateMilestoneRow(m: any): MilestoneRowErrors {
   return errors;
 }
 
-export function hasMilestoneErrors(milestones: any[]): boolean {
+function hasMilestoneErrors(milestones: any[]): boolean {
   return milestones.length === 0 || milestones.some((m) => Object.keys(validateMilestoneRow(m)).length > 0);
 }
 
-export function hasTierErrors(tiers: any[]): boolean {
+function hasTierErrors(tiers: any[]): boolean {
   return tiers.length === 0 || tiers.some((t) => !t.name?.trim() || hasMilestoneErrors(t.milestones || []));
 }
 
@@ -132,7 +132,7 @@ const trashBtnStyle: React.CSSProperties = {
   color: "var(--coral-700)",
 };
 
-export function MilestoneListEditor({
+function MilestoneListEditor({
   milestones,
   onChange,
 }: {
@@ -233,7 +233,7 @@ export function MilestoneListEditor({
   );
 }
 
-export function TiersEditor({ tiers, onChange }: { tiers: any[]; onChange: (t: any[]) => void }) {
+function TiersEditor({ tiers, onChange }: { tiers: any[]; onChange: (t: any[]) => void }) {
   const update = (i: number, patch: any) => onChange(tiers.map((t, idx) => (idx === i ? { ...t, ...patch } : t)));
   const remove = (i: number) => onChange(tiers.filter((_, idx) => idx !== i));
   const add = () => onChange([...tiers, { name: `Tier ${tiers.length + 1}`, milestones: [emptyMilestone()] }]);
