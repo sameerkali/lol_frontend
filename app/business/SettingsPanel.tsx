@@ -512,9 +512,13 @@ export function SignupRewardsSection({
   onSave: (patch: any) => Promise<void>;
   saving?: boolean;
 }) {
-  const [signupFields, setSignupFields] = React.useState(
-    business.signupFields || { name: false, email: false, dob: false }
-  );
+  // Tolerates a backend that hasn't migrated the old `birthday` field name to
+  // `dob` yet — reads whichever one is present so the toggle doesn't appear to
+  // silently reset after a save+refresh while that migration is in flight.
+  const [signupFields, setSignupFields] = React.useState(() => {
+    const sf = business.signupFields || {};
+    return { name: !!sf.name, email: !!sf.email, dob: !!(sf.dob ?? sf.birthday) };
+  });
   const [headStartEnabled, setHeadStartEnabled] = React.useState(!!business.headStart?.enabled);
   const [headStartStamps, setHeadStartStamps] = React.useState<number | "">(business.headStart?.stamps ?? 0);
   const [saved, flash] = useSavedFlag();
