@@ -9,22 +9,18 @@ export function RewardCard({
   detail,
   state = "unlocked",
   onRedeem,
-  shine = false,
   style,
 }: {
   title: string;
   detail?: string;
   state?: "unlocked" | "redeemed";
   onRedeem?: () => void;
-  shine?: boolean;
   style?: React.CSSProperties;
 }) {
   const redeemed = state === "redeemed";
   return (
     <div
       style={{
-        position: "relative",
-        overflow: "hidden",
         background: redeemed ? "var(--paper-200)" : "var(--sun-100)",
         border: "var(--border)",
         borderRadius: "var(--radius-lg)",
@@ -69,18 +65,6 @@ export function RewardCard({
         <Button variant="reward" size="sm" onClick={onRedeem}>
           Redeem
         </Button>
-      ) : null}
-      {shine && !redeemed ? (
-        <span
-          style={{
-            position: "absolute",
-            inset: 0,
-            pointerEvents: "none",
-            background: "linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.85) 50%, transparent 65%)",
-            backgroundSize: "240% 100%",
-            animation: "lol-shine 900ms var(--ease-out) 1 both",
-          }}
-        />
       ) : null}
     </div>
   );

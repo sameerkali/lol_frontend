@@ -15,7 +15,6 @@ export function Select({
   onChange,
   options = [],
   disabled = false,
-  placeholder,
   style,
 }: {
   label?: string;
@@ -25,7 +24,6 @@ export function Select({
   onChange?: (v: string) => void;
   options: (SelectOption | string)[];
   disabled?: boolean;
-  placeholder?: string;
   style?: React.CSSProperties;
 }) {
   const rid = React.useId();
@@ -75,11 +73,6 @@ export function Select({
             cursor: disabled ? "not-allowed" : "pointer",
           }}
         >
-          {placeholder ? (
-            <option value="" disabled>
-              {placeholder}
-            </option>
-          ) : null}
           {options.map((o) => {
             const val = typeof o === "string" ? o : o.value;
             const lab = typeof o === "string" ? o : o.label;

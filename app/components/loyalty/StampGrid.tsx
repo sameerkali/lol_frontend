@@ -9,7 +9,6 @@ export function StampGrid({
   glyph = "coffee",
   columns = 5,
   size = 58,
-  animateFrom = null,
 }: {
   total?: number;
   filled?: number;
@@ -17,7 +16,6 @@ export function StampGrid({
   glyph?: string;
   columns?: number;
   size?: number;
-  animateFrom?: number | null;
 }) {
   const isMilestone = (n: number) => milestones.includes(n);
   return (
@@ -44,7 +42,6 @@ export function StampGrid({
               ? "var(--sun-100)"
               : "var(--paper-200)";
         const fg = done && !ms ? "var(--paper-000)" : "var(--ink-900)";
-        const animate = animateFrom !== null && n > animateFrom && n <= filled;
         return (
           <span
             key={n}
@@ -60,12 +57,6 @@ export function StampGrid({
               borderRadius: "50%",
               boxShadow: done ? "var(--pop-1)" : "none",
               borderStyle: !done && !ms ? "dashed" : "solid",
-              animation: animate
-                ? "lol-pop-in var(--dur-slow) var(--ease-pop) both"
-                : undefined,
-              animationDelay: animate
-                ? `${(n - animateFrom - 1) * 110}ms`
-                : undefined,
             }}
           >
             {done ? (

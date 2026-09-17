@@ -4,7 +4,6 @@ import { Icon } from "./Icon";
 
 const TONES: Record<string, React.CSSProperties> = {
   neutral: { background: "var(--paper-000)", color: "var(--ink-900)" },
-  brand: { background: "var(--grape-500)", color: "var(--paper-000)" },
   success: { background: "var(--mint-500)", color: "var(--ink-900)" },
   reward: { background: "var(--sun-500)", color: "var(--ink-900)" },
   danger: { background: "var(--coral-500)", color: "var(--ink-900)" },
