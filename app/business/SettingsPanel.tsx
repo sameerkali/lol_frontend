@@ -19,6 +19,13 @@ export const LIMITS = {
   flatOff: { min: 1, max: 1000000 },
 };
 
+function rangeError(value: number | "", limits: { min: number; max: number }): string | undefined {
+  if (value === "") return "Required";
+  if (value < limits.min) return `Min ${limits.min}`;
+  if (value > limits.max) return `Max ${limits.max}`;
+  return undefined;
+}
+
 const DEFAULT_TIER_LADDER = [
   { name: "Bronze", count: 5 },
   { name: "Silver", count: 8 },
@@ -287,7 +294,7 @@ function SavedNote({ show }: { show: boolean }) {
   );
 }
 
-function useSavedFlag() {
+export function useSavedFlag() {
   const [saved, setSaved] = React.useState(false);
   const flash = React.useCallback(() => {
     setSaved(true);
@@ -316,16 +323,10 @@ export function EarningSection({
   const [lapsedAfterDays, setLapsedAfterDays] = React.useState<number | "">(business.lapsedAfterDays ?? 365);
   const [saved, flash] = useSavedFlag();
 
-  const amountPerPointError =
-    earningMode === "bill_amount"
-      ? amountPerPoint === "" ? "Required" : amountPerPoint < LIMITS.amountPerPoint.min ? `Min ${LIMITS.amountPerPoint.min}` : amountPerPoint > LIMITS.amountPerPoint.max ? `Max ${LIMITS.amountPerPoint.max}` : undefined
-      : undefined;
-  const minBillAmountError =
-    earningMode === "visits_with_min_bill"
-      ? minBillAmount === "" ? "Required" : minBillAmount < LIMITS.minBillAmount.min ? `Min ${LIMITS.minBillAmount.min}` : minBillAmount > LIMITS.minBillAmount.max ? `Max ${LIMITS.minBillAmount.max}` : undefined
-      : undefined;
-  const stampLimitError = stampLimitPerDay === "" ? "Required" : stampLimitPerDay < LIMITS.stampLimitPerDay.min ? `Min ${LIMITS.stampLimitPerDay.min}` : stampLimitPerDay > LIMITS.stampLimitPerDay.max ? `Max ${LIMITS.stampLimitPerDay.max}` : undefined;
-  const lapsedError = lapsedAfterDays === "" ? "Required" : lapsedAfterDays < LIMITS.lapsedAfterDays.min ? `Min ${LIMITS.lapsedAfterDays.min}` : lapsedAfterDays > LIMITS.lapsedAfterDays.max ? `Max ${LIMITS.lapsedAfterDays.max}` : undefined;
+  const amountPerPointError = earningMode === "bill_amount" ? rangeError(amountPerPoint, LIMITS.amountPerPoint) : undefined;
+  const minBillAmountError = earningMode === "visits_with_min_bill" ? rangeError(minBillAmount, LIMITS.minBillAmount) : undefined;
+  const stampLimitError = rangeError(stampLimitPerDay, LIMITS.stampLimitPerDay);
+  const lapsedError = rangeError(lapsedAfterDays, LIMITS.lapsedAfterDays);
 
   const invalid = !!(amountPerPointError || minBillAmountError || stampLimitError || lapsedError);
 
@@ -518,9 +519,7 @@ export function SignupRewardsSection({
   const [headStartStamps, setHeadStartStamps] = React.useState<number | "">(business.headStart?.stamps ?? 0);
   const [saved, flash] = useSavedFlag();
 
-  const headStartError = headStartEnabled
-    ? headStartStamps === "" ? "Required" : headStartStamps < LIMITS.headStartStamps.min ? `Min ${LIMITS.headStartStamps.min}` : headStartStamps > LIMITS.headStartStamps.max ? `Max ${LIMITS.headStartStamps.max}` : undefined
-    : undefined;
+  const headStartError = headStartEnabled ? rangeError(headStartStamps, LIMITS.headStartStamps) : undefined;
   const invalid = !!headStartError;
 
   const save = async () => {

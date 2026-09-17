@@ -27,6 +27,7 @@ import {
   SignupRewardsSection,
   BrandingSection,
   PinSection,
+  useSavedFlag,
 } from "../business/SettingsPanel";
 import { DashboardSection, CustomerTable } from "../business/PanelSections";
 
@@ -51,21 +52,20 @@ const PLAN_OPTIONS = [
 
 function OwnerAccountSection({ business, onSave, saving }: { business: any; onSave: (patch: any) => Promise<void>; saving?: boolean }) {
   const [newPassword, setNewPassword] = React.useState("");
-  const [saved, setSaved] = React.useState(false);
+  const [saved, flash] = useSavedFlag();
 
   const submit = async () => {
     if (newPassword.length < 8) return;
     await onSave({ ownerPassword: newPassword });
     setNewPassword("");
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    flash();
   };
 
   return (
     <Card pad={24}>
       <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 420 }}>
         <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Owner login</div>
-        <Input label="Owner email" value={business.owner?.email || ""} disabled onChange={() => {}} />
+        <Input label="Owner email" value={business.owner?.email || ""} disabled />
         <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>
           Admin override: reset the owner&apos;s password directly, no current password required.
         </div>
@@ -116,8 +116,10 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
   const statusMut = usePatchBusinessStatus();
   const deleteMut = useDeleteBusiness();
 
-  const customersList = Array.isArray(custData?.customers || custData) ? (custData?.customers || custData) : [];
-  const birthdayList = Array.isArray(birthdayData?.customers || birthdayData) ? (birthdayData?.customers || birthdayData) : [];
+  const customersRaw = custData?.customers || custData;
+  const customersList = Array.isArray(customersRaw) ? customersRaw : [];
+  const birthdayRaw = birthdayData?.customers || birthdayData;
+  const birthdayList = Array.isArray(birthdayRaw) ? birthdayRaw : [];
   const allTierNames: string[] = Array.from(
     new Set([...(business?.tiers || []).map((t: any) => t.name), ...customersList.map((c: any) => c.ruleSnapshot?.tierName).filter(Boolean)])
   );
