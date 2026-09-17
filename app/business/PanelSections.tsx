@@ -23,6 +23,20 @@ export function SectionHeader({ eyebrow, title, action }: { eyebrow: string; tit
   );
 }
 
+export function formatRewardText(rewardType?: string, rewardValue?: string): string {
+  const value = (rewardValue || "").trim();
+  switch (rewardType) {
+    case "percent_off":
+      return value ? `${value}% off` : "% off";
+    case "flat_off":
+      return value ? `₹${value} off` : "₹ off";
+    case "free_item":
+      return value || "Free item";
+    default:
+      return value || "Reward";
+  }
+}
+
 /** Formats a "YYYY-MM-DD" date of birth, or the legacy "MM-DD"-only value, for display. */
 export function formatDob(dob?: string | null): string {
   if (!dob) return "—";

@@ -8,6 +8,7 @@ import { Icon } from "../components/core/Icon";
 import { Sticker } from "../components/core/Sticker";
 import { PhoneInput } from "../components/forms/PhoneInput";
 import { Input } from "../components/forms/Input";
+import { DateOfBirthInput } from "../components/forms/DateOfBirthInput";
 import { NumberInput } from "../components/forms/NumberInput";
 import { PinPad } from "../components/forms/PinPad";
 import { StampGrid } from "../components/loyalty/StampGrid";
@@ -21,22 +22,10 @@ import { Celebration } from "../components/feedback/Celebration";
 import { EmptyState } from "../components/feedback/EmptyState";
 import { BottomBar } from "../components/navigation/BottomBar";
 import { TopBar } from "../components/navigation/TopBar";
+import { validateIndianPhone, validateEmailIfProvided, validateDob } from "../lib/validation";
+import { formatRewardText } from "../business/PanelSections";
 
 const PHONE_STORAGE_PREFIX = "lol_phone_";
-
-function formatRewardText(rewardType?: string, rewardValue?: string) {
-  const value = (rewardValue || "").trim();
-  switch (rewardType) {
-    case "percent_off":
-      return value ? `${value}% off` : "% off";
-    case "flat_off":
-      return value ? `₹${value} off` : "₹ off";
-    case "free_item":
-      return value || "Free item";
-    default:
-      return value || "Reward";
-  }
-}
 
 export default function CustomerPage({ slug }: { slug: string }) {
   const { data: biz, isLoading: bizLoading } = usePublicBusiness(slug);
@@ -46,6 +35,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
   const [autoChecking, setAutoChecking] = React.useState(true);
   const [tab, setTab] = React.useState("card");
   const [phone, setPhone] = React.useState("");
+  const [phoneError, setPhoneError] = React.useState("");
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [birthdayDate, setBirthdayDate] = React.useState("");
@@ -95,6 +85,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
   const switchNumber = () => {
     localStorage.removeItem(storageKey);
     setPhone("");
+    setPhoneError("");
     setName("");
     setEmail("");
     setBirthdayDate("");
@@ -178,7 +169,9 @@ export default function CustomerPage({ slug }: { slug: string }) {
   };
 
   const handleLookup = async () => {
-    if (phone.length < 10) return;
+    const err = validateIndianPhone(phone);
+    setPhoneError(err || "");
+    if (err) return;
     try {
       const res = await lookupMut.mutateAsync(phone);
       localStorage.setItem(storageKey, phone);
@@ -192,7 +185,12 @@ export default function CustomerPage({ slug }: { slug: string }) {
     }
   };
 
+  const emailError = biz?.signupFields?.email ? validateEmailIfProvided(email) : undefined;
+  const dobError = biz?.signupFields?.dob ? validateDob(birthdayDate) : undefined;
+  const signupInvalid = !!emailError || !!dobError;
+
   const handleSignup = async () => {
+    if (signupInvalid) return;
     try {
       await signupMut.mutateAsync({
         phone,
@@ -240,7 +238,12 @@ export default function CustomerPage({ slug }: { slug: string }) {
           No app. No password. Type your number and we&apos;ll find your stamps.
         </p>
       </div>
-      <PhoneInput value={phone} onChange={setPhone} hint="Used only to find your card." />
+      <PhoneInput
+        value={phone}
+        onChange={(v) => { setPhone(v); if (phoneError) setPhoneError(""); }}
+        error={phoneError}
+        hint={phoneError ? undefined : "Used only to find your card."}
+      />
       <Button size="lg" fullWidth icon={<Icon name="arrow-right" size={21} />} wobble onClick={handleLookup} disabled={lookupMut.isPending || phone.length < 10}>
         {lookupMut.isPending ? "Finding..." : "Find my card"}
       </Button>
@@ -268,9 +271,9 @@ export default function CustomerPage({ slug }: { slug: string }) {
         </Card>
       )}
       {signupFields.name && <Input label="Name" icon="user" value={name} onChange={setName} placeholder="Priya" />}
-      {signupFields.email && <Input label="Email" icon="mail" type="email" value={email} onChange={setEmail} placeholder="priya@email.com" />}
-      {signupFields.dob && <Input label="Birthday" icon="cake" type="date" value={birthdayDate} onChange={setBirthdayDate} />}
-      <Button size="lg" fullWidth onClick={handleSignup} disabled={signupMut.isPending}>
+      {signupFields.email && <Input label="Email" icon="mail" type="email" value={email} onChange={setEmail} placeholder="priya@email.com" error={emailError} />}
+      {signupFields.dob && <DateOfBirthInput label="Birthday" value={birthdayDate} onChange={setBirthdayDate} />}
+      <Button size="lg" fullWidth onClick={handleSignup} disabled={signupMut.isPending || signupInvalid}>
         {signupMut.isPending ? "Creating..." : "Create my card"}
       </Button>
     </div>

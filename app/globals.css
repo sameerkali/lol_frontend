@@ -222,6 +222,69 @@
    squeezing columns unreadably thin on a narrow screen. */
 .lol-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
+/* react-datepicker theme — restyled to match this app's bordered-card look
+   instead of its own default theme. Scoped under .lol-dob-picker (rather
+   than bare .react-datepicker) so these rules out-specificity the library's
+   own bundled stylesheet regardless of which CSS chunk loads last. */
+.react-datepicker-popper { z-index: 60; }
+.lol-dob-picker .react-datepicker {
+  font-family: var(--font-body);
+  border: var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--pop-2);
+  overflow: hidden;
+  background: var(--surface-card);
+}
+.lol-dob-picker .react-datepicker__triangle { display: none; }
+.lol-dob-picker .react-datepicker__header {
+  background: var(--surface-sunk);
+  border-bottom: var(--border-hair);
+  padding-top: 12px;
+}
+.lol-dob-picker .react-datepicker__current-month {
+  color: var(--text-strong);
+  font: var(--type-button);
+}
+.lol-dob-picker .react-datepicker__day-name {
+  color: var(--text-muted);
+  font: var(--type-label);
+  text-transform: uppercase;
+}
+.lol-dob-picker .react-datepicker__day {
+  color: var(--text-body);
+  border-radius: var(--radius-sm);
+  font: var(--type-body-sm);
+}
+.lol-dob-picker .react-datepicker__day:hover {
+  background: var(--grape-100);
+}
+.lol-dob-picker .react-datepicker__day--selected,
+.lol-dob-picker .react-datepicker__day--keyboard-selected {
+  background: var(--grape-500);
+  color: var(--paper-000);
+  font-weight: 700;
+}
+.lol-dob-picker .react-datepicker__day--disabled {
+  color: var(--ink-300);
+}
+.lol-dob-picker .react-datepicker__day--outside-month {
+  color: var(--ink-300);
+}
+.lol-dob-picker .react-datepicker__navigation-icon::before {
+  border-color: var(--ink-500);
+}
+/* dropdownMode="select" renders native <select>s for month/year. */
+.lol-dob-picker .react-datepicker__month-select,
+.lol-dob-picker .react-datepicker__year-select {
+  background: var(--paper-000);
+  border: var(--border-hair);
+  border-radius: var(--radius-sm);
+  color: var(--text-strong);
+  font: var(--type-body-sm);
+  padding: 4px 6px;
+  margin: 0 4px;
+}
+
 body {
   margin: 0;
   background: var(--surface-page);
