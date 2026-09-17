@@ -4,6 +4,7 @@ import { useAuth } from "../../lib/auth";
 import { useRouter } from "next/navigation";
 import { Button } from "../../components/core/Button";
 import { Card } from "../../components/core/Card";
+import { Icon } from "../../components/core/Icon";
 import { Input } from "../../components/forms/Input";
 import { Skeleton } from "../../components/feedback/Skeleton";
 import { validateLoginForm, splitFieldErrors, type LoginFieldErrors } from "../../lib/validation";
@@ -62,6 +63,12 @@ export default function BusinessLogin() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-page)", padding: 24 }}>
       <Card pad={32} style={{ width: "100%", maxWidth: 400 }}>
+        <button
+          onClick={() => router.push("/")}
+          style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "transparent", border: 0, cursor: "pointer", color: "var(--text-muted)", font: "600 14px/1 var(--font-body)", padding: 0, marginBottom: 20 }}
+        >
+          <Icon name="arrow-left" size={16} /> Back
+        </button>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{ font: "900 48px/0.8 var(--font-display)", letterSpacing: "-0.03em", color: "var(--ink-900)" }}>
             lol<span style={{ color: "var(--coral-500)" }}>.</span>
