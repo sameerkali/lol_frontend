@@ -38,6 +38,36 @@ export function formatDob(dob?: string | null): string {
   return dob;
 }
 
+/** Search/sort/tier/unredeemed filter state shared by the business and admin customer tables — identical everywhere except which useXCustomers hook the resulting params feed into. */
+export function useCustomerListFilters() {
+  const [search, setSearch] = React.useState("");
+  const [sort, setSort] = React.useState("newest");
+  const [onlyUnredeemed, setOnlyUnredeemed] = React.useState(false);
+  const [tier, setTier] = React.useState("");
+
+  const params = React.useMemo(() => {
+    const p: Record<string, string> = { sort };
+    if (search.trim()) p.phone = search.trim();
+    if (onlyUnredeemed) p.hasUnredeemedRewards = "true";
+    if (tier) p.tier = tier;
+    return p;
+  }, [search, sort, onlyUnredeemed, tier]);
+
+  return { search, setSearch, sort, setSort, onlyUnredeemed, setOnlyUnredeemed, tier, setTier, params };
+}
+
+/** Unwraps a `{ customers: [...] }` or bare-array query response into a safe array. */
+export function normalizeList(data: any): any[] {
+  const raw = data?.customers || data;
+  return Array.isArray(raw) ? raw : [];
+}
+
+export function deriveTierNames(tiers: any[] | undefined, list: any[]): string[] {
+  return Array.from(
+    new Set([...(tiers || []).map((t: any) => t.name), ...list.map((c: any) => c.ruleSnapshot?.tierName).filter(Boolean)])
+  );
+}
+
 /* ---------------------------- Dashboard ---------------------------- */
 
 export function DashboardSection({

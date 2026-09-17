@@ -29,7 +29,7 @@ import {
   PinSection,
   useSavedFlag,
 } from "../business/SettingsPanel";
-import { DashboardSection, CustomerTable } from "../business/PanelSections";
+import { DashboardSection, CustomerTable, useCustomerListFilters, normalizeList, deriveTierNames } from "../business/PanelSections";
 
 const TABS = [
   { value: "dashboard", label: "Dashboard" },
@@ -90,10 +90,13 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
   const [deleteConfirmText, setDeleteConfirmText] = React.useState("");
   const [pinRevealDash, setPinRevealDash] = React.useState(false);
 
-  const [customerSearch, setCustomerSearch] = React.useState("");
-  const [customerSort, setCustomerSort] = React.useState("newest");
-  const [onlyUnredeemed, setOnlyUnredeemed] = React.useState(false);
-  const [customerTier, setCustomerTier] = React.useState("");
+  const {
+    search: customerSearch, setSearch: setCustomerSearch,
+    sort: customerSort, setSort: setCustomerSort,
+    onlyUnredeemed, setOnlyUnredeemed,
+    tier: customerTier, setTier: setCustomerTier,
+    params: customerParams,
+  } = useCustomerListFilters();
 
   React.useEffect(() => {
     if (!authLoading && !user) router.replace("/admin/login");
@@ -102,13 +105,6 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
   const { data: business, isLoading, isError } = useAdminBusiness(id);
   const { data: qr } = useAdminBusinessQr(id);
   const { data: dash } = useAdminBusinessDashboard(id);
-  const customerParams = React.useMemo(() => {
-    const p: Record<string, string> = { sort: customerSort };
-    if (customerSearch.trim()) p.phone = customerSearch.trim();
-    if (onlyUnredeemed) p.hasUnredeemedRewards = "true";
-    if (customerTier) p.tier = customerTier;
-    return p;
-  }, [customerSearch, customerSort, onlyUnredeemed, customerTier]);
   const { data: custData, isLoading: custLoading } = useAdminBusinessCustomers(id, customerParams);
   const { data: birthdayData } = useAdminBusinessCustomers(id, { dobToday: "true", limit: "10" });
   const updateMut = useUpdateBusiness();
@@ -116,13 +112,9 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
   const statusMut = usePatchBusinessStatus();
   const deleteMut = useDeleteBusiness();
 
-  const customersRaw = custData?.customers || custData;
-  const customersList = Array.isArray(customersRaw) ? customersRaw : [];
-  const birthdayRaw = birthdayData?.customers || birthdayData;
-  const birthdayList = Array.isArray(birthdayRaw) ? birthdayRaw : [];
-  const allTierNames: string[] = Array.from(
-    new Set([...(business?.tiers || []).map((t: any) => t.name), ...customersList.map((c: any) => c.ruleSnapshot?.tierName).filter(Boolean)])
-  );
+  const customersList = normalizeList(custData);
+  const birthdayList = normalizeList(birthdayData);
+  const allTierNames = deriveTierNames(business?.tiers, customersList);
 
   if (authLoading || !user) {
     return (

@@ -28,7 +28,7 @@ import {
   BrandingSection,
   PinSection,
 } from "./SettingsPanel";
-import { SectionHeader, DashboardSection, CustomerTable } from "./PanelSections";
+import { SectionHeader, DashboardSection, CustomerTable, useCustomerListFilters, normalizeList, deriveTierNames } from "./PanelSections";
 
 const NAV = [
   { value: "dashboard", label: "Dashboard", icon: "layout-dashboard" },
@@ -89,10 +89,13 @@ export default function BusinessPanel() {
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
   const [pinRevealDash, setPinRevealDash] = React.useState(false);
 
-  const [customerSearch, setCustomerSearch] = React.useState("");
-  const [customerSort, setCustomerSort] = React.useState("newest");
-  const [onlyUnredeemed, setOnlyUnredeemed] = React.useState(false);
-  const [customerTier, setCustomerTier] = React.useState("");
+  const {
+    search: customerSearch, setSearch: setCustomerSearch,
+    sort: customerSort, setSort: setCustomerSort,
+    onlyUnredeemed, setOnlyUnredeemed,
+    tier: customerTier, setTier: setCustomerTier,
+    params: customerParams,
+  } = useCustomerListFilters();
 
   React.useEffect(() => {
     if (!authLoading && !user) router.replace("/business/login");
@@ -100,13 +103,6 @@ export default function BusinessPanel() {
 
   const { data: me, isLoading: meLoading } = useBusinessMe();
   const { data: dash } = useBusinessDashboard();
-  const customerParams = React.useMemo(() => {
-    const p: Record<string, string> = { sort: customerSort };
-    if (customerSearch.trim()) p.phone = customerSearch.trim();
-    if (onlyUnredeemed) p.hasUnredeemedRewards = "true";
-    if (customerTier) p.tier = customerTier;
-    return p;
-  }, [customerSearch, customerSort, onlyUnredeemed, customerTier]);
   const { data: custData, isLoading: custLoading } = useBusinessCustomers(customerParams);
   const { data: birthdayData } = useBusinessCustomers({ dobToday: "true", limit: "10" });
   const { data: qr } = useBusinessQr();
@@ -120,13 +116,9 @@ export default function BusinessPanel() {
   if (authLoading || !user) return <PanelSkeleton navItems={5} />;
 
   const b = me || {};
-  const customers = custData?.customers || custData || [];
-  const list = Array.isArray(customers) ? customers : [];
-  const birthdaysToday = birthdayData?.customers || birthdayData || [];
-  const birthdayList = Array.isArray(birthdaysToday) ? birthdaysToday : [];
-  const allTierNames: string[] = Array.from(
-    new Set([...(b.tiers || []).map((t: any) => t.name), ...list.map((c: any) => c.ruleSnapshot?.tierName).filter(Boolean)])
-  );
+  const list = normalizeList(custData);
+  const birthdayList = normalizeList(birthdayData);
+  const allTierNames = deriveTierNames(b.tiers, list);
 
   const savePin = async (pin: string) => {
     await pinMut.mutateAsync({ pin });
