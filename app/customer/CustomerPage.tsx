@@ -139,22 +139,26 @@ export default function CustomerPage({ slug }: { slug: string }) {
     setPinOpen(true);
   };
 
+  const markVisit = async (pin?: string) => {
+    const res = await visitMut.mutateAsync({
+      phone,
+      pin,
+      billAmount: needsBillAmount && billAmount !== "" ? billAmount : undefined,
+    });
+    setBillAmount("");
+    if (res.newlyUnlocked?.length) {
+      setCelebrate({ ...res.newlyUnlocked[0], cardAdvanced: res.cardAdvanced, tierName: res.card?.tierName });
+    } else {
+      showToast(res.note || "Visit marked");
+    }
+  };
+
   const completePin = async (v: string) => {
     if (pinMode === "visit") {
       try {
-        const res = await visitMut.mutateAsync({
-          phone,
-          pin: biz?.checkInMode === "pin" ? v : undefined,
-          billAmount: needsBillAmount && billAmount !== "" ? billAmount : undefined,
-        });
+        await markVisit(biz?.checkInMode === "pin" ? v : undefined);
         setPinOpen(false);
         setPin("");
-        setBillAmount("");
-        if (res.newlyUnlocked?.length) {
-          setCelebrate({ ...res.newlyUnlocked[0], cardAdvanced: res.cardAdvanced, tierName: res.card?.tierName });
-        } else {
-          showToast(res.note || "Visit marked");
-        }
       } catch (e: any) {
         setPinError(e.message || "Failed");
         setPin("");
@@ -370,23 +374,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
       <div className="lol-customer-frame">
         <TopBar title={biz.name} subtitle={biz.location || ""} logo={Logo} right={screen !== "lookup" ? <Badge tone="neutral" size="sm">{visits} visits</Badge> : null} tone={biz.branding?.primaryColor || "var(--grape-500)"} />
         <div ref={contentRef} style={{ flex: 1, overflowY: "auto" }}>{body}</div>
-        {screen === "card" && tab === "card" && biz.checkInMode !== "automatic" && (
-          <div style={{ padding: "14px 20px 16px", borderTop: "var(--border)", background: "var(--paper-000)", display: "flex", flexDirection: "column", gap: 10 }}>
-            {needsBillAmount && (
-              <NumberInput
-                prefix="₹"
-                placeholder={biz.earningMode === "visits_with_min_bill" ? `Min ${biz.minBillAmount}` : "Bill amount"}
-                value={billAmount}
-                onChange={setBillAmount}
-                min={0}
-              />
-            )}
-            <Button size="lg" fullWidth icon={<Icon name="hand" size={21} />} onClick={() => openPin("visit")} disabled={visitMut.isPending || !billAmountValid}>
-              Mark my visit
-            </Button>
-          </div>
-        )}
-        {screen === "card" && biz.checkInMode === "automatic" && (
+        {screen === "card" && tab === "card" && (
           <div style={{ padding: "14px 20px 16px", borderTop: "var(--border)", background: "var(--paper-000)", display: "flex", flexDirection: "column", gap: 10 }}>
             {needsBillAmount && (
               <NumberInput
@@ -401,13 +389,11 @@ export default function CustomerPage({ slug }: { slug: string }) {
               size="lg"
               fullWidth
               icon={<Icon name="hand" size={21} />}
-              onClick={async () => {
-                try {
-                  const res = await visitMut.mutateAsync({ phone, billAmount: needsBillAmount && billAmount !== "" ? billAmount : undefined });
-                  setBillAmount("");
-                  if (res.newlyUnlocked?.length) setCelebrate({ ...res.newlyUnlocked[0], cardAdvanced: res.cardAdvanced, tierName: res.card?.tierName }); else showToast(res.note || "Visit marked");
-                } catch (e: any) { showToast(e.message || "Failed"); }
-              }}
+              onClick={
+                biz.checkInMode === "automatic"
+                  ? async () => { try { await markVisit(); } catch (e: any) { showToast(e.message || "Failed"); } }
+                  : () => openPin("visit")
+              }
               disabled={visitMut.isPending || !billAmountValid}
             >
               Mark my visit
