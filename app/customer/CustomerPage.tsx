@@ -190,12 +190,11 @@ export default function CustomerPage({ slug }: { slug: string }) {
 
   const handleSignup = async () => {
     try {
-      const birthday = birthdayDate ? birthdayDate.slice(5) : undefined; // "YYYY-MM-DD" -> "MM-DD"
       await signupMut.mutateAsync({
         phone,
         name: biz.signupFields?.name ? name || undefined : undefined,
         email: biz.signupFields?.email ? email || undefined : undefined,
-        birthday: biz.signupFields?.birthday ? birthday : undefined,
+        dob: biz.signupFields?.dob ? birthdayDate || undefined : undefined,
       });
       localStorage.setItem(storageKey, phone);
       setScreen("card");
@@ -266,7 +265,7 @@ export default function CustomerPage({ slug }: { slug: string }) {
       )}
       {signupFields.name && <Input label="Name" icon="user" value={name} onChange={setName} placeholder="Priya" />}
       {signupFields.email && <Input label="Email" icon="mail" type="email" value={email} onChange={setEmail} placeholder="priya@email.com" />}
-      {signupFields.birthday && <Input label="Birthday" icon="cake" type="date" value={birthdayDate} onChange={setBirthdayDate} />}
+      {signupFields.dob && <Input label="Birthday" icon="cake" type="date" value={birthdayDate} onChange={setBirthdayDate} />}
       <Button size="lg" fullWidth onClick={handleSignup} disabled={signupMut.isPending}>
         {signupMut.isPending ? "Creating..." : "Create my card"}
       </Button>

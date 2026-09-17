@@ -512,7 +512,7 @@ export function SignupRewardsSection({
   saving?: boolean;
 }) {
   const [signupFields, setSignupFields] = React.useState(
-    business.signupFields || { name: false, email: false, birthday: false }
+    business.signupFields || { name: false, email: false, dob: false }
   );
   const [headStartEnabled, setHeadStartEnabled] = React.useState(!!business.headStart?.enabled);
   const [headStartStamps, setHeadStartStamps] = React.useState<number | "">(business.headStart?.stamps ?? 0);
@@ -540,9 +540,9 @@ export function SignupRewardsSection({
         <Switch checked={!!signupFields.name} onChange={(v) => setSignupFields({ ...signupFields, name: v })} label="Name" />
         <Switch checked={!!signupFields.email} onChange={(v) => setSignupFields({ ...signupFields, email: v })} label="Email" />
         <Switch
-          checked={!!signupFields.birthday}
-          onChange={(v) => setSignupFields({ ...signupFields, birthday: v })}
-          label="Birthday"
+          checked={!!signupFields.dob}
+          onChange={(v) => setSignupFields({ ...signupFields, dob: v })}
+          label="Date of birth"
           hint="We'll flag today's birthdays on your dashboard so you know who to treat."
         />
 

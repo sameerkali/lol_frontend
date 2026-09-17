@@ -15,14 +15,11 @@ import {
 import { api } from "../lib/api";
 import { Button } from "../components/core/Button";
 import { Card } from "../components/core/Card";
-import { Badge } from "../components/core/Badge";
 import { Icon } from "../components/core/Icon";
 import { Input } from "../components/forms/Input";
-import { Select } from "../components/forms/Select";
-import { StatTile } from "../components/loyalty/StatTile";
 import { SideNav } from "../components/navigation/SideNav";
 import { Dialog } from "../components/feedback/Dialog";
-import { PanelSkeleton, TableSkeleton, SkeletonStatRow, Skeleton } from "../components/feedback/Skeleton";
+import { PanelSkeleton, Skeleton } from "../components/feedback/Skeleton";
 import { splitFieldErrors } from "../lib/validation";
 import {
   EarningSection,
@@ -31,6 +28,7 @@ import {
   BrandingSection,
   PinSection,
 } from "./SettingsPanel";
+import { SectionHeader, DashboardSection, CustomerTable } from "./PanelSections";
 
 const NAV = [
   { value: "dashboard", label: "Dashboard", icon: "layout-dashboard" },
@@ -47,20 +45,6 @@ const SETTINGS_TABS = [
   { value: "pin", label: "PIN" },
   { value: "account", label: "Account" },
 ];
-
-function SectionHeader({ eyebrow, title, action }: { eyebrow: string; title: string; action?: React.ReactNode }) {
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
-      <div>
-        <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 8 }}>
-          {eyebrow}
-        </div>
-        <h1 style={{ margin: 0, font: "var(--type-title)", letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>{title}</h1>
-      </div>
-      {action}
-    </div>
-  );
-}
 
 function AccountSection() {
   const changeMut = useChangeBusinessPassword();
@@ -124,7 +108,7 @@ export default function BusinessPanel() {
     return p;
   }, [customerSearch, customerSort, onlyUnredeemed, customerTier]);
   const { data: custData, isLoading: custLoading } = useBusinessCustomers(customerParams);
-  const { data: birthdayData } = useBusinessCustomers({ birthdayToday: "true", limit: "10" });
+  const { data: birthdayData } = useBusinessCustomers({ dobToday: "true", limit: "10" });
   const { data: qr } = useBusinessQr();
 
   const updateMut = useUpdateBusinessSettings();
@@ -177,109 +161,16 @@ export default function BusinessPanel() {
 
   /* ---------- Dashboard ---------- */
   const Dashboard = (
-    <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 28 }}>
-      <SectionHeader eyebrow="Dashboard" title={b.name || "..."} />
-      {dash ? (
-        <div className="lol-stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-          <StatTile label="Total customers" value={dash.totalCustomers ?? list.length} icon="users" tone="grape" />
-          <StatTile label="Visits (30d)" value={dash.visits ?? 0} icon="stamp" tone="mint" />
-          <StatTile label="Redemptions (30d)" value={dash.redemptions ?? 0} icon="gift" tone="sun" />
-          <StatTile label="Repeat visit rate" value={dash.repeatVisitRate != null ? `${dash.repeatVisitRate}%` : "—"} icon="trending-up" tone="sky" />
-        </div>
-      ) : (
-        <SkeletonStatRow />
-      )}
-
-      {dash?.tierBreakdown?.length > 0 && (
-        <Card pad={20} elevation={1}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <Icon name="crown" size={20} color="var(--grape-500)" />
-            <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Customers by tier</div>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            {dash.tierBreakdown.map((t: any) => (
-              <div
-                key={t.tierName}
-                style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", background: "var(--surface-sunk)", border: "var(--border-hair)", borderRadius: "var(--radius-pill)" }}
-              >
-                <Badge tone="reward" size="sm">{t.tierName}</Badge>
-                <span style={{ font: "700 15px/1 var(--font-mono)", color: "var(--text-strong)" }}>{t.count}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {birthdayList.length > 0 && (
-        <Card tone="sun" pad={20} elevation={1}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <Icon name="cake" size={20} color="var(--sun-700)" />
-            <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Birthdays today 🎉</div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {birthdayList.map((c: any, i: number) => (
-              <div key={c._id || i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < birthdayList.length - 1 ? "var(--border-hair)" : "none" }}>
-                <span style={{ font: "600 14px/1.3 var(--font-body)", color: "var(--text-strong)" }}>{c.name || c.phone}</span>
-                <span style={{ font: "var(--type-mono)", color: "var(--text-muted)", fontSize: 13 }}>{c.phone}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", marginTop: 12 }}>
-            Give them a shout when they visit — a free treat or a discount goes a long way.
-          </div>
-        </Card>
-      )}
-
-      <Card pad={20}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ width: 44, height: 44, display: "grid", placeItems: "center", background: "var(--surface-sunk)", borderRadius: "var(--radius-md)", border: "var(--border-hair)" }}>
-              <Icon name="key" size={20} color="var(--ink-500)" />
-            </span>
-            <div>
-              <div style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)" }}>Business PIN</div>
-              <div style={{ font: "700 26px/1 var(--font-mono)", letterSpacing: "0.1em", color: "var(--text-strong)", marginTop: 4 }}>
-                {meLoading ? "—" : b.pin ? (pinRevealDash ? b.pin : "••••") : "Not set"}
-              </div>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {b.pin && (
-              <Button variant="ghost" size="sm" icon={<Icon name={pinRevealDash ? "eye-off" : "eye"} size={16} />} onClick={() => setPinRevealDash((v) => !v)}>
-                {pinRevealDash ? "Hide" : "Show"}
-              </Button>
-            )}
-            <Button variant="secondary" size="sm" icon={<Icon name="pencil" size={16} />} onClick={() => { setTab("settings"); setSettingsTab("pin"); }}>
-              Change
-            </Button>
-          </div>
-        </div>
-      </Card>
-
-      {meLoading ? <TableSkeleton rows={4} columns={2} /> : (
-        <Card pad={24}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <div style={{ font: "var(--type-subtitle)", letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>Recent customers</div>
-            <Badge tone="info" size="sm">{list.length} total</Badge>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-            {list.slice(0, 5).map((c: any, i: number) => (
-              <div key={c._id || i} style={{ display: "flex", gap: 14, alignItems: "center", padding: "14px 0", borderBottom: i < Math.min(list.length, 5) - 1 ? "var(--border-hair)" : "none" }}>
-                <span style={{ width: 40, height: 40, display: "grid", placeItems: "center", background: "var(--grape-100)", border: "var(--border-hair)", borderRadius: "50%", font: "700 14px/1 var(--font-body)", color: "var(--grape-700)" }}>
-                  {(c.name || c.phone || "?").charAt(0)}
-                </span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ font: "600 15px/1.3 var(--font-body)", color: "var(--text-strong)" }}>{c.name || c.phone}</div>
-                  <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>{c.totalVisits ?? 0} visits · {c.totalPoints ?? 0} points</div>
-                </div>
-                <Badge tone={c.ruleSnapshot?.tierName ? "reward" : "neutral"} size="sm">{c.ruleSnapshot?.tierName || "—"}</Badge>
-              </div>
-            ))}
-            {list.length === 0 && <div style={{ padding: 20, textAlign: "center", color: "var(--text-muted)" }}>No customers yet.</div>}
-          </div>
-        </Card>
-      )}
-    </div>
+    <DashboardSection
+      title={b.name || "..."}
+      dash={dash}
+      list={list}
+      birthdayList={birthdayList}
+      pin={b.pin}
+      pinRevealed={pinRevealDash}
+      onTogglePinReveal={() => setPinRevealDash((v) => !v)}
+      onEditPin={() => { setTab("settings"); setSettingsTab("pin"); }}
+    />
   );
 
   /* ---------- Milestones ---------- */
@@ -296,70 +187,21 @@ export default function BusinessPanel() {
 
   /* ---------- Customers ---------- */
   const Customers = (
-    <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 20 }}>
-      <SectionHeader
-        eyebrow="Customers"
-        title="All customers"
-        action={
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<Icon name="download" size={16} />}
-            onClick={() => api.download(`/business/customers/export?${new URLSearchParams(customerParams).toString()}`, "customers.csv")}
-          >
-            Export CSV
-          </Button>
-        }
-      />
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-        <Input placeholder="Search by phone..." icon="search" value={customerSearch} onChange={setCustomerSearch} style={{ width: 240 }} />
-        <Select value={customerSort} onChange={setCustomerSort} options={[
-          { value: "newest", label: "Newest first" },
-          { value: "visits", label: "Most visits" },
-          { value: "lastVisit", label: "Last visit" },
-          ...(allTierNames.length > 0 ? [{ value: "tier", label: "Tier (highest first)" }] : []),
-        ]} style={{ width: 190 }} />
-        {allTierNames.length > 0 && (
-          <Select
-            value={customerTier}
-            onChange={setCustomerTier}
-            options={[{ value: "", label: "All tiers" }, ...allTierNames.map((t) => ({ value: t, label: t }))]}
-            style={{ width: 170 }}
-          />
-        )}
-        <label style={{ display: "flex", alignItems: "center", gap: 8, font: "var(--type-body-sm)", color: "var(--text-body)", cursor: "pointer" }}>
-          <input type="checkbox" checked={onlyUnredeemed} onChange={(e) => setOnlyUnredeemed(e.target.checked)} />
-          Unredeemed rewards only
-        </label>
-      </div>
-      {custLoading ? <TableSkeleton rows={6} columns={5} /> : (
-        <Card pad={0} elevation={1} style={{ overflow: "hidden" }}>
-        <div className="lol-table-scroll">
-          <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.3fr 0.8fr 0.8fr 1fr 1fr", padding: "14px 20px", borderBottom: "var(--border)", background: "var(--paper-200)", minWidth: 680 }}>
-            {["Name", "Phone", "Visits", "Points", "Tier", "Last visit"].map((h) => (
-              <span key={h} style={{ font: "var(--type-label)", letterSpacing: "var(--tracking-label)", textTransform: "uppercase", color: "var(--text-muted)" }}>{h}</span>
-            ))}
-          </div>
-          {list.map((c: any, i: number) => (
-            <div key={c._id || i} style={{ display: "grid", gridTemplateColumns: "1.8fr 1.3fr 0.8fr 0.8fr 1fr 1fr", padding: "16px 20px", borderBottom: i < list.length - 1 ? "var(--border-hair)" : "none", alignItems: "center", minWidth: 680 }}>
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <span style={{ width: 34, height: 34, display: "grid", placeItems: "center", background: "var(--grape-100)", border: "var(--border-hair)", borderRadius: "50%", font: "700 13px/1 var(--font-body)", color: "var(--grape-700)" }}>
-                  {(c.name || c.phone || "?").charAt(0)}
-                </span>
-                <span style={{ font: "600 14px/1.3 var(--font-body)", color: "var(--text-strong)" }}>{c.name || "—"}</span>
-              </div>
-              <span style={{ font: "var(--type-mono)", color: "var(--text-body)", fontSize: 13 }}>{c.phone}</span>
-              <span style={{ font: "700 15px/1 var(--font-mono)", color: "var(--text-strong)" }}>{c.totalVisits ?? 0}</span>
-              <span style={{ font: "700 15px/1 var(--font-mono)", color: "var(--text-strong)" }}>{c.totalPoints ?? 0}</span>
-              <Badge tone={c.ruleSnapshot?.tierName ? "reward" : "neutral"} size="sm">{c.ruleSnapshot?.tierName || "—"}</Badge>
-              <span style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>{c.lastVisitAt ? new Date(c.lastVisitAt).toLocaleDateString() : "—"}</span>
-            </div>
-          ))}
-          {list.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>No customers yet. Put the tag on the counter.</div>}
-        </div>
-        </Card>
-      )}
-    </div>
+    <CustomerTable
+      customers={list}
+      loading={custLoading}
+      tierNames={allTierNames}
+      search={customerSearch}
+      onSearchChange={setCustomerSearch}
+      sort={customerSort}
+      onSortChange={setCustomerSort}
+      tier={customerTier}
+      onTierChange={setCustomerTier}
+      onlyUnredeemed={onlyUnredeemed}
+      onOnlyUnredeemedChange={setOnlyUnredeemed}
+      onExport={() => api.download(`/business/customers/export?${new URLSearchParams(customerParams).toString()}`, "customers.csv")}
+      onRowClick={(c) => router.push(`/business/customers/${c._id || c.id}`)}
+    />
   );
 
   /* ---------- Settings ---------- */

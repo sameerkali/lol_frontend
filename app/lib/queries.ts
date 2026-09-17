@@ -76,6 +76,22 @@ export function useAdminBusinessQr(id: string) {
   return useQuery({ queryKey: ["admin", "business", id, "qr"], queryFn: () => api.get<any>(`/admin/businesses/${id}/qr`), enabled: !!id });
 }
 
+// Admin has full operational access to a business, not just its settings — mirrors the
+// business-scoped dashboard/customers endpoints below, but path-scoped by businessId
+// since an admin's token isn't tied to a single business.
+export function useAdminBusinessDashboard(id: string) {
+  return useQuery({ queryKey: ["admin", "business", id, "dashboard"], queryFn: () => api.get<any>(`/admin/businesses/${id}/dashboard`), enabled: !!id, refetchInterval: 20_000 });
+}
+
+export function useAdminBusinessCustomers(id: string, params?: Record<string, string>) {
+  const q = params ? "?" + new URLSearchParams(params).toString() : "";
+  return useQuery({ queryKey: ["admin", "business", id, "customers", params], queryFn: () => api.get<any>(`/admin/businesses/${id}/customers${q}`), enabled: !!id, refetchInterval: 20_000 });
+}
+
+export function useAdminBusinessCustomer(id: string, customerId: string) {
+  return useQuery({ queryKey: ["admin", "business", id, "customer", customerId], queryFn: () => api.get<any>(`/admin/businesses/${id}/customers/${customerId}`), enabled: !!id && !!customerId });
+}
+
 /* ======================== BUSINESS ======================== */
 
 export function useBusinessMe() {
@@ -93,6 +109,10 @@ export function useBusinessDashboard(from?: string, to?: string) {
 export function useBusinessCustomers(params?: Record<string, string>) {
   const q = params ? "?" + new URLSearchParams(params).toString() : "";
   return useQuery({ queryKey: ["business", "customers", params], queryFn: () => api.get<any>(`/business/customers${q}`), refetchInterval: 20_000 });
+}
+
+export function useBusinessCustomer(id: string) {
+  return useQuery({ queryKey: ["business", "customer", id], queryFn: () => api.get<any>(`/business/customers/${id}`), enabled: !!id });
 }
 
 export function useUpdateBusinessSettings() {
@@ -142,7 +162,7 @@ export function useCustomerLookup(slug: string) {
 }
 
 export function useCustomerSignup(slug: string) {
-  return useMutation({ mutationFn: (body: { phone: string; name?: string; email?: string; birthday?: string }) => api.post<any>(`/public/businesses/${slug}/signup`, body), meta: { silent: true } });
+  return useMutation({ mutationFn: (body: { phone: string; name?: string; email?: string; dob?: string }) => api.post<any>(`/public/businesses/${slug}/signup`, body), meta: { silent: true } });
 }
 
 export function useCustomerCard(slug: string, phone: string) {

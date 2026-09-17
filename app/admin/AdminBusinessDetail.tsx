@@ -9,7 +9,10 @@ import {
   usePatchBusinessStatus,
   useDeleteBusiness,
   useAdminBusinessQr,
+  useAdminBusinessDashboard,
+  useAdminBusinessCustomers,
 } from "../lib/queries";
+import { api } from "../lib/api";
 import { Button } from "../components/core/Button";
 import { Card } from "../components/core/Card";
 import { Badge } from "../components/core/Badge";
@@ -25,10 +28,13 @@ import {
   BrandingSection,
   PinSection,
 } from "../business/SettingsPanel";
+import { DashboardSection, CustomerTable } from "../business/PanelSections";
 
 const TABS = [
+  { value: "dashboard", label: "Dashboard" },
   { value: "general", label: "Earning & check-in" },
   { value: "milestones", label: "Milestones" },
+  { value: "customers", label: "Customers" },
   { value: "signup", label: "Signup & rewards" },
   { value: "branding", label: "Branding" },
   { value: "pin", label: "PIN" },
@@ -78,10 +84,16 @@ function OwnerAccountSection({ business, onSave, saving }: { business: any; onSa
 export default function AdminBusinessDetail({ id }: { id: string }) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const [tab, setTab] = React.useState("general");
+  const [tab, setTab] = React.useState("dashboard");
   const [showStatusConfirm, setShowStatusConfirm] = React.useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = React.useState("");
+  const [pinRevealDash, setPinRevealDash] = React.useState(false);
+
+  const [customerSearch, setCustomerSearch] = React.useState("");
+  const [customerSort, setCustomerSort] = React.useState("newest");
+  const [onlyUnredeemed, setOnlyUnredeemed] = React.useState(false);
+  const [customerTier, setCustomerTier] = React.useState("");
 
   React.useEffect(() => {
     if (!authLoading && !user) router.replace("/admin/login");
@@ -89,10 +101,26 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
 
   const { data: business, isLoading, isError } = useAdminBusiness(id);
   const { data: qr } = useAdminBusinessQr(id);
+  const { data: dash } = useAdminBusinessDashboard(id);
+  const customerParams = React.useMemo(() => {
+    const p: Record<string, string> = { sort: customerSort };
+    if (customerSearch.trim()) p.phone = customerSearch.trim();
+    if (onlyUnredeemed) p.hasUnredeemedRewards = "true";
+    if (customerTier) p.tier = customerTier;
+    return p;
+  }, [customerSearch, customerSort, onlyUnredeemed, customerTier]);
+  const { data: custData, isLoading: custLoading } = useAdminBusinessCustomers(id, customerParams);
+  const { data: birthdayData } = useAdminBusinessCustomers(id, { dobToday: "true", limit: "10" });
   const updateMut = useUpdateBusiness();
   const planMut = usePatchBusinessPlan();
   const statusMut = usePatchBusinessStatus();
   const deleteMut = useDeleteBusiness();
+
+  const customersList = Array.isArray(custData?.customers || custData) ? (custData?.customers || custData) : [];
+  const birthdayList = Array.isArray(birthdayData?.customers || birthdayData) ? (birthdayData?.customers || birthdayData) : [];
+  const allTierNames: string[] = Array.from(
+    new Set([...(business?.tiers || []).map((t: any) => t.name), ...customersList.map((c: any) => c.ruleSnapshot?.tierName).filter(Boolean)])
+  );
 
   if (authLoading || !user) {
     return (
@@ -209,8 +237,39 @@ export default function AdminBusinessDetail({ id }: { id: string }) {
               ))}
             </div>
 
+            {tab === "dashboard" && (
+              <DashboardSection
+                title={business.name}
+                dash={dash}
+                list={customersList}
+                birthdayList={birthdayList}
+                pin={business.pin}
+                pinRevealed={pinRevealDash}
+                onTogglePinReveal={() => setPinRevealDash((v) => !v)}
+                onEditPin={() => setTab("pin")}
+                padded={false}
+              />
+            )}
             {tab === "general" && <EarningSection business={business} onSave={save} saving={updateMut.isPending} key={`g-${business.updatedAt}`} />}
             {tab === "milestones" && <MilestonesSection business={business} onSave={save} saving={updateMut.isPending} key={`m-${business.updatedAt}`} />}
+            {tab === "customers" && (
+              <CustomerTable
+                customers={customersList}
+                loading={custLoading}
+                tierNames={allTierNames}
+                search={customerSearch}
+                onSearchChange={setCustomerSearch}
+                sort={customerSort}
+                onSortChange={setCustomerSort}
+                tier={customerTier}
+                onTierChange={setCustomerTier}
+                onlyUnredeemed={onlyUnredeemed}
+                onOnlyUnredeemedChange={setOnlyUnredeemed}
+                onExport={() => api.download(`/admin/businesses/${id}/customers/export?${new URLSearchParams(customerParams).toString()}`, "customers.csv")}
+                onRowClick={(c) => router.push(`/admin/businesses/${id}/customers/${c._id || c.id}`)}
+                padded={false}
+              />
+            )}
             {tab === "signup" && <SignupRewardsSection business={business} onSave={save} saving={updateMut.isPending} key={`s-${business.updatedAt}`} />}
             {tab === "branding" && <BrandingSection branding={business.branding || {}} onSave={(b) => save({ branding: b })} saving={updateMut.isPending} key={`b-${business.updatedAt}`} />}
             {tab === "pin" && (
