@@ -1,11 +1,48 @@
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Matches the backend's own rule exactly (business.routes.js: body("pin").matches(/^\d{4,6}$/)).
 const PIN_RE = /^\d{4,6}$/;
+// Indian mobile numbers: 10 digits, first digit 6-9 (TRAI numbering plan).
+const INDIAN_MOBILE_RE = /^[6-9]\d{9}$/;
 
-function validateEmail(email: string, label = "Email"): string | undefined {
+export function validateEmail(email: string, label = "Email"): string | undefined {
   const trimmed = email.trim();
   if (!trimmed) return `${label} is required`;
   if (!EMAIL_RE.test(trimmed)) return "Enter a valid email address";
+  return undefined;
+}
+
+/** For optional email fields (e.g. customer signup) — only checks format, doesn't require a value. */
+export function validateEmailIfProvided(email: string): string | undefined {
+  if (!email.trim()) return undefined;
+  return EMAIL_RE.test(email.trim()) ? undefined : "Enter a valid email address";
+}
+
+export function validateIndianPhone(phone: string): string | undefined {
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return "Phone number is required";
+  if (digits.length !== 10) return "Enter a 10-digit phone number";
+  if (!INDIAN_MOBILE_RE.test(digits)) return "Enter a valid Indian mobile number";
+  return undefined;
+}
+
+/** Whole years between a "YYYY-MM-DD" date of birth and today. */
+export function calcAge(dob?: string | null): number | null {
+  if (!dob || !/^\d{4}-\d{2}-\d{2}$/.test(dob)) return null;
+  const birth = new Date(`${dob}T00:00:00`);
+  if (Number.isNaN(birth.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const monthDiff = now.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+export function validateDob(dob: string, minAge = 8, maxAge = 90): string | undefined {
+  if (!dob) return undefined;
+  const age = calcAge(dob);
+  if (age == null) return "Enter a valid date";
+  if (age < minAge) return `Must be at least ${minAge} years old`;
+  if (age > maxAge) return "Enter a valid date of birth";
   return undefined;
 }
 
