@@ -10,7 +10,7 @@ import { emitToast } from "./toastBus";
 function reportError(error: unknown, meta: unknown) {
   if ((meta as { silent?: boolean } | undefined)?.silent) return;
   const message = error instanceof Error ? error.message : "Something went wrong. Please try again.";
-  emitToast(message, "danger");
+  emitToast(message);
 }
 
 const qc = new QueryClient({

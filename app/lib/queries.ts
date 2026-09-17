@@ -2,6 +2,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
 
+function qs(params?: Record<string, string>): string {
+  return params && Object.keys(params).length ? "?" + new URLSearchParams(params).toString() : "";
+}
+
 /* ======================== ADMIN ======================== */
 
 export function useAdminStats() {
@@ -23,8 +27,7 @@ export function useAdminTemplates() {
 }
 
 export function useAdminBusinesses(params?: Record<string, string>) {
-  const q = params ? "?" + new URLSearchParams(params).toString() : "";
-  return useQuery({ queryKey: ["admin", "businesses", params], queryFn: () => api.get<any>(`/admin/businesses${q}`) });
+  return useQuery({ queryKey: ["admin", "businesses", params], queryFn: () => api.get<any>(`/admin/businesses${qs(params)}`) });
 }
 
 export function useAdminBusiness(id: string) {
@@ -84,8 +87,7 @@ export function useAdminBusinessDashboard(id: string) {
 }
 
 export function useAdminBusinessCustomers(id: string, params?: Record<string, string>) {
-  const q = params ? "?" + new URLSearchParams(params).toString() : "";
-  return useQuery({ queryKey: ["admin", "business", id, "customers", params], queryFn: () => api.get<any>(`/admin/businesses/${id}/customers${q}`), enabled: !!id, refetchInterval: 20_000 });
+  return useQuery({ queryKey: ["admin", "business", id, "customers", params], queryFn: () => api.get<any>(`/admin/businesses/${id}/customers${qs(params)}`), enabled: !!id, refetchInterval: 20_000 });
 }
 
 export function useAdminBusinessCustomer(id: string, customerId: string) {
@@ -107,8 +109,7 @@ export function useBusinessDashboard(from?: string, to?: string) {
 }
 
 export function useBusinessCustomers(params?: Record<string, string>) {
-  const q = params ? "?" + new URLSearchParams(params).toString() : "";
-  return useQuery({ queryKey: ["business", "customers", params], queryFn: () => api.get<any>(`/business/customers${q}`), refetchInterval: 20_000 });
+  return useQuery({ queryKey: ["business", "customers", params], queryFn: () => api.get<any>(`/business/customers${qs(params)}`), refetchInterval: 20_000 });
 }
 
 export function useBusinessCustomer(id: string) {

@@ -2,6 +2,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Matches the backend's own rule exactly (business.routes.js: body("pin").matches(/^\d{4,6}$/)).
 const PIN_RE = /^\d{4,6}$/;
 
+function validateEmail(email: string, label = "Email"): string | undefined {
+  const trimmed = email.trim();
+  if (!trimmed) return `${label} is required`;
+  if (!EMAIL_RE.test(trimmed)) return "Enter a valid email address";
+  return undefined;
+}
+
 export interface LoginFieldErrors {
   email?: string;
   password?: string;
@@ -9,10 +16,9 @@ export interface LoginFieldErrors {
 
 export function validateLoginForm(email: string, password: string): LoginFieldErrors {
   const errors: LoginFieldErrors = {};
-  const trimmedEmail = email.trim();
 
-  if (!trimmedEmail) errors.email = "Email is required";
-  else if (!EMAIL_RE.test(trimmedEmail)) errors.email = "Enter a valid email address";
+  const emailError = validateEmail(email);
+  if (emailError) errors.email = emailError;
 
   if (!password) errors.password = "Password is required";
 
@@ -34,9 +40,8 @@ export function validateCreateBusinessForm(
   const errors: CreateBusinessFieldErrors = {};
   if (!name.trim()) errors.name = "Business name is required";
 
-  const trimmedEmail = ownerEmail.trim();
-  if (!trimmedEmail) errors.ownerEmail = "Owner email is required";
-  else if (!EMAIL_RE.test(trimmedEmail)) errors.ownerEmail = "Enter a valid email address";
+  const emailError = validateEmail(ownerEmail, "Owner email");
+  if (emailError) errors.ownerEmail = emailError;
 
   if (!ownerPassword) errors.ownerPassword = "Owner password is required";
   else if (ownerPassword.length < 8) errors.ownerPassword = "Password must be at least 8 characters";

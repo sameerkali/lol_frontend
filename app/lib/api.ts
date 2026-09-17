@@ -17,10 +17,13 @@ class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
+function getAuthHeaders(): Record<string, string> {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
+  const headers: Record<string, string> = getAuthHeaders();
 
   let body = opts.body;
   if (body && !(body instanceof FormData)) {
@@ -45,11 +48,7 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
 }
 
 async function downloadFile(path: string, filenameFallback: string): Promise<void> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-
-  const res = await fetch(`${BASE}${path}`, { headers });
+  const res = await fetch(`${BASE}${path}`, { headers: getAuthHeaders() });
   if (!res.ok) {
     let msg = `Request failed (${res.status})`;
     try {
@@ -89,5 +88,3 @@ export const api = {
     request<T>(path, { method: "POST", body: formData }),
   download: downloadFile,
 };
-
-export { ApiError };

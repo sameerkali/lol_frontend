@@ -36,6 +36,22 @@ function clearSessionCookie() {
   document.cookie = `${SESSION_COOKIE}=; path=/; max-age=0; samesite=lax`;
 }
 
+function clearSession() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  clearSessionCookie();
+}
+
+function buildAuthUser(role: Role, raw: any): AuthUser {
+  return {
+    id: raw._id || raw.id,
+    name: raw.name,
+    email: raw.email || raw.owner?.email || "",
+    role,
+    businessId: raw._id || raw.id,
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,9 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // optimistic gate trusts that cookie alone, so a leftover cookie with
       // no matching token bounces the user between /admin and /admin/login
       // forever instead of ever reaching the login form.
-      localStorage.removeItem("token");
-      localStorage.removeItem("role");
-      clearSessionCookie();
+      clearSession();
       setLoading(false);
       return;
     }
@@ -59,20 +73,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const path = role === "admin" ? "/admin/auth/me" : "/business/me";
     api.get<any>(path)
       .then((d) => {
-        const u = role === "admin" ? (d.admin || d) : (d.business || d);
-        setUser({
-          id: u._id || u.id,
-          name: u.name,
-          email: u.email || u.owner?.email || "",
-          role,
-          businessId: u._id || u.id,
-        });
+        setUser(buildAuthUser(role, role === "admin" ? (d.admin || d) : (d.business || d)));
         setSessionCookie(role);
       })
       .catch(() => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        clearSessionCookie();
+        clearSession();
       })
       .finally(() => setLoading(false));
   }, []);
@@ -82,21 +87,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const d = await api.post<{ token: string; admin?: any; business?: any }>(path, { email, password });
     localStorage.setItem("token", d.token);
     localStorage.setItem("role", role);
-    const u = role === "admin" ? d.admin : d.business;
-    setUser({
-      id: u._id || u.id,
-      name: u.name,
-      email: u.email || u.owner?.email || "",
-      role,
-      businessId: u._id || u.id,
-    });
+    setUser(buildAuthUser(role, role === "admin" ? d.admin : d.business));
     setSessionCookie(role);
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    clearSessionCookie();
+    clearSession();
     setUser(null);
   }, []);
 
