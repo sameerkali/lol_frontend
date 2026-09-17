@@ -1,0 +1,29 @@
+:root {
+  --ease-pop: cubic-bezier(0.2, 1.4, 0.35, 1);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-slow: 420ms;
+  --dur-celebrate: 900ms;
+
+  --press-shift: 3px;
+  --hover-lift: -2px;
+}
+
+@keyframes lol-pop-in {
+  0%   { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+  70%  { transform: scale(1.12) rotate(4deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes lol-wobble {
+  0%, 100% { transform: rotate(-2deg); }
+  50%      { transform: rotate(2deg); }
+}
+@keyframes lol-shine {
+  0%   { background-position: -140% 0; }
+  100% { background-position: 240% 0; }
+}
+@keyframes lol-rise {
+  from { transform: translateY(10px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}

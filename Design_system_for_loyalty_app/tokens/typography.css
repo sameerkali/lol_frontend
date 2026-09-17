@@ -1,0 +1,23 @@
+:root {
+  --font-display: "Darker Grotesque", "Haettenschweiler", Impact, sans-serif;
+  --font-body: "Outfit", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "Space Mono", "SFMono-Regular", Menlo, monospace;
+
+  /* Display — Darker Grotesque runs SMALL and TALL; always size it up. */
+  --type-hero: 800 clamp(56px, 9vw, 104px)/0.82 var(--font-display);
+  --type-display: 800 clamp(40px, 6vw, 68px)/0.85 var(--font-display);
+  --type-title: 800 34px/0.9 var(--font-display);
+  --type-subtitle: 700 26px/0.95 var(--font-display);
+
+  --type-body-lg: 400 18px/1.5 var(--font-body);
+  --type-body: 400 15px/1.55 var(--font-body);
+  --type-body-sm: 400 13px/1.5 var(--font-body);
+  --type-label: 700 12px/1.2 var(--font-body);
+  --type-button: 700 15px/1 var(--font-body);
+  --type-mono: 400 13px/1.4 var(--font-mono);
+  --type-numeral: 700 28px/1 var(--font-mono);
+
+  --tracking-display: -0.02em;
+  --tracking-label: 0.12em;
+  --tracking-mono: 0.04em;
+}

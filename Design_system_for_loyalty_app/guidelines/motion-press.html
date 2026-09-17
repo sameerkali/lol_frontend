@@ -1,0 +1,19 @@
+<!-- @dsCard group="Brand" viewport="700x190" subtitle="Hover lifts, press lands. Try it." name="Press physics" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Press physics</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);}
+  body{padding:20px;box-sizing:border-box;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;}
+  .sw{display:flex;flex-direction:column;gap:6px;}
+  .chip{width:92px;height:56px;border:var(--border);border-radius:var(--radius-sm);box-shadow:var(--pop-1);}
+  .nm{font:var(--type-label);letter-spacing:.06em;color:var(--text-strong);}
+  .hx{font:var(--type-mono);font-size:11px;color:var(--text-muted);}
+  .lbl{font:var(--type-label);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--text-muted);}
+</style></head><body><style>
+     .btn{font:var(--type-button);background:var(--grape-500);color:#fff;border:var(--border);border-radius:var(--radius-pill);padding:16px 30px;box-shadow:var(--pop-2);cursor:pointer;transition:transform var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out);}
+     .btn:hover{transform:translate(-2px,-2px);box-shadow:var(--pop-3);}
+     .btn:active{transform:translate(3px,3px);box-shadow:var(--pop-pressed);}
+   </style>
+   <button class="btn">Mark my visit</button>
+   <div class="hx" style="margin-top:14px">hover −2,−2 → pop-3 &nbsp;·&nbsp; active +3,+3 → pop-pressed &nbsp;·&nbsp; 120ms ease-out</div></body></html>

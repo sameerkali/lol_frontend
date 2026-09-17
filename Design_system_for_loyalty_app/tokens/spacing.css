@@ -1,0 +1,21 @@
+:root {
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 96px;
+
+  --gutter-mobile: var(--sp-5);
+  --gutter-panel: var(--sp-6);
+  --stack-tight: var(--sp-2);
+  --stack: var(--sp-4);
+  --stack-loose: var(--sp-6);
+
+  --tap-min: 48px;
+  --width-mobile: 420px;
+  --width-panel: 1280px;
+}

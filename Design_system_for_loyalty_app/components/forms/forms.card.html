@@ -1,0 +1,43 @@
+<!-- @dsCard group="Components" viewport="700x460" subtitle="Text, phone, select, checkbox, switch, PIN pad" name="Forms" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Forms</title>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.js"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="../../ds-preview-loader.js"></script>
+<style>
+  html,body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);}
+  #root{padding:20px;}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+  .col{display:flex;flex-direction:column;gap:14px;}
+  .lbl{font:var(--type-label);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--text-muted);width:100%;}
+  [data-lucide]{stroke-width:2.25;}
+</style></head><body><div id="root"></div>
+<script type="text/babel">
+const NEED = "Input, PhoneInput, Select, Checkbox, Switch, PinPad";
+function Demo(){
+  const [phone,setPhone]=React.useState('9876543210');
+  const [bill,setBill]=React.useState(false);
+  const [bday,setBday]=React.useState(true);
+  const [pin,setPin]=React.useState('28');
+  return (<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24,alignItems:'start'}}>
+    <div className="col">
+      <PhoneInput value={phone} onChange={setPhone} />
+      <Input label="Bill amount" prefix="₹" mono placeholder="450" />
+      <Input label="Business PIN" error="That PIN didn't match. Try again." mono value="1234" onChange={()=>{}} />
+      <Select label="Earning mode" options={['Visits only','Bill amount','Visits with a minimum bill']} hint="1 visit = 1 stamp." />
+      <Switch checked={bill} onChange={setBill} label="Bill amount field" hint="Off. Staff won't be asked for a total." />
+      <Checkbox checked={bday} onChange={setBday} label="Birthday" hint="Needed for the birthday reward." />
+    </div>
+    <div><PinPad value={pin} onChange={setPin} /></div>
+  </div>);
+}
+(async () => {
+  const NS = await window.DSResolve(["../../components/core/Icon.jsx","../../components/core/Button.jsx","../../components/core/IconButton.jsx","../../components/core/Card.jsx","../../components/core/Badge.jsx","../../components/core/Tag.jsx","../../components/core/Sticker.jsx","../../components/forms/Input.jsx","../../components/forms/PhoneInput.jsx","../../components/forms/Select.jsx","../../components/forms/Checkbox.jsx","../../components/forms/Switch.jsx","../../components/forms/PinPad.jsx","../../components/feedback/Dialog.jsx","../../components/feedback/Toast.jsx","../../components/feedback/Tooltip.jsx","../../components/feedback/Celebration.jsx","../../components/feedback/EmptyState.jsx","../../components/navigation/Tabs.jsx","../../components/navigation/SideNav.jsx","../../components/navigation/BottomBar.jsx","../../components/navigation/TopBar.jsx","../../components/loyalty/StampGrid.jsx","../../components/loyalty/ProgressBar.jsx","../../components/loyalty/MilestoneLadder.jsx","../../components/loyalty/RewardCard.jsx","../../components/loyalty/TierBadge.jsx","../../components/loyalty/StatTile.jsx"]);
+  Object.assign(window, NS);
+  ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+  setTimeout(() => window.lucide && window.lucide.createIcons({ nameAttr: 'data-lucide' }), 60);
+})();
+</script></body></html>

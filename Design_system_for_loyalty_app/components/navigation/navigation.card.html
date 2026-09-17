@@ -1,0 +1,48 @@
+<!-- @dsCard group="Components" viewport="700x400" subtitle="Tabs, side rail, bottom bar, branded header" name="Navigation" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Navigation</title>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.js"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="../../ds-preview-loader.js"></script>
+<style>
+  html,body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);}
+  #root{padding:20px;}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+  .col{display:flex;flex-direction:column;gap:14px;}
+  .lbl{font:var(--type-label);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--text-muted);width:100%;}
+  [data-lucide]{stroke-width:2.25;}
+</style></head><body><div id="root"></div>
+<script type="text/babel">
+const NEED = "Tabs, SideNav, BottomBar, TopBar";
+function Demo(){
+  const [t,setT]=React.useState('Progress');
+  const [n,setN]=React.useState('dash');
+  const [b,setB]=React.useState('card');
+  return (<div style={{display:'grid',gridTemplateColumns:'240px 1fr',gap:20,alignItems:'start'}}>
+    <SideNav value={n} onChange={setN} style={{borderRadius:'var(--radius-lg)',border:'var(--border)',height:340}} items={[
+      {value:'dash',label:'Dashboard',icon:'layout-dashboard'},
+      {value:'cust',label:'Customers',icon:'users'},
+      {value:'mile',label:'Milestones',icon:'trophy'},
+      {value:'set',label:'Settings',icon:'settings'},
+    ]} />
+    <div className="col">
+      <Tabs tabs={['Progress','Rewards','History']} value={t} onChange={setT} />
+      <TopBar title="Kaapi House" subtitle="Indiranagar" style={{border:'var(--border)',borderRadius:'var(--radius-lg)'}} />
+      <BottomBar value={b} onChange={setB} style={{border:'var(--border)',borderRadius:'var(--radius-lg)'}} items={[
+        {value:'card',label:'Card',icon:'stamp'},
+        {value:'rewards',label:'Rewards',icon:'gift'},
+        {value:'history',label:'History',icon:'history'},
+      ]} />
+    </div>
+  </div>);
+}
+(async () => {
+  const NS = await window.DSResolve(["../../components/core/Icon.jsx","../../components/core/Button.jsx","../../components/core/IconButton.jsx","../../components/core/Card.jsx","../../components/core/Badge.jsx","../../components/core/Tag.jsx","../../components/core/Sticker.jsx","../../components/forms/Input.jsx","../../components/forms/PhoneInput.jsx","../../components/forms/Select.jsx","../../components/forms/Checkbox.jsx","../../components/forms/Switch.jsx","../../components/forms/PinPad.jsx","../../components/feedback/Dialog.jsx","../../components/feedback/Toast.jsx","../../components/feedback/Tooltip.jsx","../../components/feedback/Celebration.jsx","../../components/feedback/EmptyState.jsx","../../components/navigation/Tabs.jsx","../../components/navigation/SideNav.jsx","../../components/navigation/BottomBar.jsx","../../components/navigation/TopBar.jsx","../../components/loyalty/StampGrid.jsx","../../components/loyalty/ProgressBar.jsx","../../components/loyalty/MilestoneLadder.jsx","../../components/loyalty/RewardCard.jsx","../../components/loyalty/TierBadge.jsx","../../components/loyalty/StatTile.jsx"]);
+  Object.assign(window, NS);
+  ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+  setTimeout(() => window.lucide && window.lucide.createIcons({ nameAttr: 'data-lucide' }), 60);
+})();
+</script></body></html>

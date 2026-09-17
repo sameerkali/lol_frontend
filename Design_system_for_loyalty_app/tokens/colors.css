@@ -1,0 +1,78 @@
+:root {
+  /* --- Base palette: "sticker book" --- */
+  --grape-100: #F0E6FF;
+  --grape-300: #C7A3FF;
+  --grape-500: #7A2FF2;
+  --grape-700: #4B17A6;
+  --grape-900: #2C0D63;
+
+  --mint-100: #DDFBF0;
+  --mint-300: #8DEFD0;
+  --mint-500: #2FD9A8;
+  --mint-700: #12996F;
+
+  --coral-100: #FFE6E1;
+  --coral-300: #FFB0A2;
+  --coral-500: #FF6A55;
+  --coral-700: #C4351F;
+
+  --sun-100: #FFF3D1;
+  --sun-300: #FFDF86;
+  --sun-500: #FFC93C;
+  --sun-700: #B8850A;
+
+  --sky-100: #DFF3FF;
+  --sky-300: #9BDBFF;
+  --sky-500: #35B6F5;
+  --sky-700: #0A6E9E;
+
+  /* --- Ink & paper (warm neutrals, low chroma) --- */
+  --ink-900: #1B1526;
+  --ink-700: #3A3049;
+  --ink-500: #6B6180;
+  --ink-300: #A9A1B8;
+  --ink-100: #DBD5E3;
+  --paper-000: #FFFFFF;
+  --paper-050: #FFFBF3;
+  --paper-100: #FDF3E3;
+  --paper-200: #F3E7D4;
+
+  /* --- Semantic aliases --- */
+  --brand: var(--grape-500);
+  --brand-deep: var(--grape-700);
+  --brand-soft: var(--grape-100);
+
+  --text-strong: var(--ink-900);
+  --text-body: var(--ink-700);
+  --text-muted: var(--ink-500);
+  --text-on-brand: var(--paper-000);
+  --text-on-accent: var(--ink-900);
+
+  --surface-page: var(--paper-100);
+  --surface-card: var(--paper-000);
+  --surface-sunk: var(--paper-200);
+  --surface-invert: var(--ink-900);
+
+  --line: var(--ink-900);
+  --line-soft: var(--ink-100);
+
+  --success: var(--mint-500);
+  --success-ink: var(--mint-700);
+  --warning: var(--sun-500);
+  --warning-ink: var(--sun-700);
+  --danger: var(--coral-500);
+  --danger-ink: var(--coral-700);
+  --info: var(--sky-500);
+  --info-ink: var(--sky-700);
+
+  /* Stamp states */
+  --stamp-empty: var(--paper-200);
+  --stamp-filled: var(--grape-500);
+  --stamp-reward: var(--sun-500);
+  --stamp-next: var(--mint-300);
+
+  /* Tiers */
+  --tier-bronze: #CE7B4A;
+  --tier-silver: #B6BECB;
+  --tier-gold: var(--sun-500);
+}

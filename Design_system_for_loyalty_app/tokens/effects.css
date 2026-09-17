@@ -1,0 +1,26 @@
+:root {
+  /* Chunky ink outline is THE structural motif. */
+  --border-w: 3px;
+  --border-w-hair: 2px;
+  --border: var(--border-w) solid var(--line);
+  --border-hair: var(--border-w-hair) solid var(--line);
+
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+
+  /* Hard offset "sticker" shadows — never blurred, always ink. */
+  --pop-1: 3px 3px 0 var(--line);
+  --pop-2: 5px 5px 0 var(--line);
+  --pop-3: 8px 8px 0 var(--line);
+  --pop-pressed: 1px 1px 0 var(--line);
+  --pop-brand: 5px 5px 0 var(--grape-700);
+
+  /* One soft shadow exists, for overlays only. */
+  --scrim: 0 24px 60px rgba(27, 21, 38, 0.34);
+
+  --focus-ring: 0 0 0 3px var(--paper-000), 0 0 0 6px var(--grape-500);
+}
