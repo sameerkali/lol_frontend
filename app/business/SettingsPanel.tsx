@@ -313,7 +313,7 @@ export function EarningSection({
   const [checkInMode, setCheckInMode] = React.useState(business.checkInMode || "automatic");
   const [billAmountFieldEnabled, setBillAmountFieldEnabled] = React.useState(!!business.billAmountFieldEnabled);
   const [stampLimitPerDay, setStampLimitPerDay] = React.useState<number | "">(business.stampLimitPerDay ?? 1);
-  const [lapsedAfterDays, setLapsedAfterDays] = React.useState<number | "">(business.lapsedAfterDays ?? 30);
+  const [lapsedAfterDays, setLapsedAfterDays] = React.useState<number | "">(business.lapsedAfterDays ?? 365);
   const [saved, flash] = useSavedFlag();
 
   const amountPerPointError =
@@ -338,7 +338,7 @@ export function EarningSection({
       checkInMode,
       billAmountFieldEnabled,
       stampLimitPerDay: stampLimitPerDay === "" ? 1 : stampLimitPerDay,
-      lapsedAfterDays: lapsedAfterDays === "" ? 30 : lapsedAfterDays,
+      lapsedAfterDays: lapsedAfterDays === "" ? 365 : lapsedAfterDays,
     });
     flash();
   };
