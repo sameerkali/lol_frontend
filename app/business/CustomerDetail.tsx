@@ -85,7 +85,7 @@ export function CustomerDetailView({
 
   if (error) {
     return (
-      <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 24, maxWidth: 720 }}>
+      <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 24, maxWidth: 960, margin: "0 auto" }}>
         {BackButton}
         <Card pad={40} style={{ textAlign: "center" }}>
           <Icon name="alert-triangle" size={28} color="var(--coral-700)" />
@@ -98,7 +98,7 @@ export function CustomerDetailView({
 
   if (loading || !customer) {
     return (
-      <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 24, maxWidth: 720 }}>
+      <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 24, maxWidth: 960, margin: "0 auto" }}>
         {BackButton}
         <Skeleton width={220} height={30} />
         <Skeleton height={140} radius="var(--radius-lg)" />
@@ -114,7 +114,7 @@ export function CustomerDetailView({
   const rewards = c.rewards || c.availableRewards || [];
 
   return (
-    <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 20, maxWidth: 720 }}>
+    <div className="lol-page-pad" style={{ padding: 32, display: "flex", flexDirection: "column", gap: 20, maxWidth: 960, margin: "0 auto" }}>
       {BackButton}
 
       <Card pad={0} style={{ overflow: "hidden" }}>
@@ -154,77 +154,87 @@ export function CustomerDetailView({
         </div>
       </Card>
 
-      {rewards.length > 0 && (
-        <Card pad={24}>
-          <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)", marginBottom: 16 }}>Rewards</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {rewards.map((r: any, i: number) => (
-              <div key={r._id || i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < rewards.length - 1 ? "var(--border-hair)" : "none" }}>
-                <span style={{ font: "600 14px/1.3 var(--font-body)", color: "var(--text-strong)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {r.label || formatRewardText(r.rewardType, r.rewardValue)}
-                </span>
-                <Badge tone={r.redeemedAt ? "neutral" : "success"} size="sm" style={{ flex: "0 0 auto" }}>{r.redeemedAt ? "Redeemed" : "Unredeemed"}</Badge>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      <Card pad={24}>
-        <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)", marginBottom: 16 }}>Visit history</div>
-        {history.length === 0 ? (
-          <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", textAlign: "center", padding: "16px 0" }}>No visits or redemptions yet.</div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {history.map((r: any, i: number) => {
-              const isVisit = r.type === "visit";
-              return (
-                <div key={r._id || i} style={{ display: "flex", gap: 12, alignItems: "center", padding: "10px 0", borderBottom: i < history.length - 1 ? "var(--border-hair)" : "none" }}>
-                  <span style={{ width: 34, height: 34, flex: "0 0 auto", display: "grid", placeItems: "center", background: isVisit ? "var(--grape-100)" : "var(--sun-100)", borderRadius: "50%" }}>
-                    <Icon name={isVisit ? "stamp" : "gift"} size={15} color={isVisit ? "var(--grape-700)" : "var(--sun-700)"} />
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ font: "600 14px/1.3 var(--font-body)", color: "var(--text-strong)" }}>{isVisit ? "Visit marked" : "Reward redeemed"}</div>
-                    {!isVisit && (r.rewardType || r.rewardValue) && (
-                      <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", marginTop: 1 }}>{formatRewardText(r.rewardType, r.rewardValue)}</div>
-                    )}
+      <div className="lol-detail-grid">
+        <Card pad={20}>
+          <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)", marginBottom: 12 }}>Visit history</div>
+          {history.length === 0 ? (
+            <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", textAlign: "center", padding: "16px 0" }}>No visits or redemptions yet.</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", maxHeight: 420, overflowY: "auto" }}>
+              {history.map((r: any, i: number) => {
+                const isVisit = r.type === "visit";
+                return (
+                  <div key={r._id || i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "7px 2px", borderBottom: i < history.length - 1 ? "var(--border-hair)" : "none" }}>
+                    <span style={{ width: 26, height: 26, flex: "0 0 auto", display: "grid", placeItems: "center", background: isVisit ? "var(--grape-100)" : "var(--sun-100)", borderRadius: "50%" }}>
+                      <Icon name={isVisit ? "stamp" : "gift"} size={12} color={isVisit ? "var(--grape-700)" : "var(--sun-700)"} />
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0, font: "600 13px/1.3 var(--font-body)", color: "var(--text-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {isVisit ? "Visit marked" : formatRewardText(r.rewardType, r.rewardValue)}
+                    </span>
+                    <span style={{ font: "var(--type-mono)", color: "var(--text-muted)", fontSize: 11, flex: "0 0 auto" }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}</span>
                   </div>
-                  <span style={{ font: "var(--type-mono)", color: "var(--text-muted)", fontSize: 12, flex: "0 0 auto" }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </Card>
+                );
+              })}
+            </div>
+          )}
+        </Card>
 
-      <Card pad={24}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-          <Icon name="whatsapp" size={20} color="#25D366" />
+        <Card pad={20}>
+          <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)", marginBottom: 12 }}>Rewards</div>
+          {rewards.length === 0 ? (
+            <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", textAlign: "center", padding: "16px 0" }}>None yet.</div>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 220, overflowY: "auto" }}>
+              {rewards.map((r: any, i: number) => (
+                <span
+                  key={r._id || i}
+                  title={r.label || formatRewardText(r.rewardType, r.rewardValue)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 5,
+                    padding: "5px 10px",
+                    maxWidth: "100%",
+                    background: r.redeemedAt ? "var(--surface-sunk)" : "var(--mint-100)",
+                    borderRadius: "var(--radius-pill)",
+                    font: "600 12px/1.3 var(--font-body)",
+                    color: r.redeemedAt ? "var(--text-muted)" : "var(--mint-700)",
+                  }}
+                >
+                  <Icon name={r.redeemedAt ? "check" : "gift"} size={11} />
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.label || formatRewardText(r.rewardType, r.rewardValue)}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <Card pad={20}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <Icon name="whatsapp" size={17} color="#25D366" />
           <div style={{ font: "var(--type-subtitle)", color: "var(--text-strong)" }}>Send a message</div>
         </div>
-        <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", marginBottom: 16 }}>
-          Pick a template. It opens WhatsApp with the message pre-filled for {c.phone}.
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {MESSAGE_TEMPLATES.map((t) => {
             const message = t.build(name, businessName);
             return (
               <div
                 key={t.key}
-                className="lol-stack-mobile"
-                style={{ display: "flex", gap: 14, alignItems: "center", padding: 14, background: "var(--surface-sunk)", border: "var(--border-hair)", borderRadius: "var(--radius-md)" }}
+                style={{ display: "flex", gap: 10, alignItems: "center", padding: "6px 10px", background: "var(--surface-sunk)", borderRadius: "var(--radius-sm)" }}
               >
-                <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-                  <div style={{ font: "600 14px/1.3 var(--font-body)", color: "var(--text-strong)" }}>{t.title}</div>
-                  <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", marginTop: 2 }}>{message}</div>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "baseline", gap: 6 }}>
+                  <span style={{ font: "700 12px/1.3 var(--font-body)", color: "var(--text-strong)", flex: "0 0 auto" }}>{t.title}</span>
+                  <span style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{message}</span>
                 </div>
                 <a
                   href={buildWhatsAppLink(c.phone, message)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 18px", background: "#25D366", color: "#fff", borderRadius: "var(--radius-pill)", font: "700 13px/1 var(--font-body)", textDecoration: "none", flex: "0 0 auto" }}
+                  aria-label={`Send "${t.title}" on WhatsApp`}
+                  style={{ width: 28, height: 28, flex: "0 0 auto", display: "grid", placeItems: "center", background: "#25D366", color: "#fff", borderRadius: "50%" }}
                 >
-                  <Icon name="whatsapp" size={16} color="#fff" /> WhatsApp
+                  <Icon name="whatsapp" size={14} color="#fff" />
                 </a>
               </div>
             );
