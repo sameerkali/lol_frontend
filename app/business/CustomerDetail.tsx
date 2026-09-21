@@ -163,13 +163,14 @@ export function CustomerDetailView({
             <div style={{ display: "flex", flexDirection: "column", maxHeight: 420, overflowY: "auto" }}>
               {history.map((r: any, i: number) => {
                 const isVisit = r.type === "visit";
+                const notCounted = isVisit && r.stampAwarded === false;
                 return (
-                  <div key={r._id || i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "7px 2px", borderBottom: i < history.length - 1 ? "var(--border-hair)" : "none" }}>
-                    <span style={{ width: 26, height: 26, flex: "0 0 auto", display: "grid", placeItems: "center", background: isVisit ? "var(--grape-100)" : "var(--sun-100)", borderRadius: "50%" }}>
-                      <Icon name={isVisit ? "stamp" : "gift"} size={12} color={isVisit ? "var(--grape-700)" : "var(--sun-700)"} />
+                  <div key={r._id || i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "7px 2px", borderBottom: i < history.length - 1 ? "var(--border-hair)" : "none" }} title={notCounted ? r.note : undefined}>
+                    <span style={{ width: 26, height: 26, flex: "0 0 auto", display: "grid", placeItems: "center", background: notCounted ? "var(--paper-100, #eee)" : isVisit ? "var(--grape-100)" : "var(--sun-100)", borderRadius: "50%" }}>
+                      <Icon name={notCounted ? "x" : isVisit ? "stamp" : "gift"} size={12} color={notCounted ? "var(--text-muted)" : isVisit ? "var(--grape-700)" : "var(--sun-700)"} />
                     </span>
-                    <span style={{ flex: 1, minWidth: 0, font: "600 13px/1.3 var(--font-body)", color: "var(--text-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {isVisit ? "Visit marked" : formatRewardText(r.rewardType, r.rewardValue)}
+                    <span style={{ flex: 1, minWidth: 0, font: "600 13px/1.3 var(--font-body)", color: notCounted ? "var(--text-muted)" : "var(--text-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {notCounted ? `Visit not counted${r.note ? ` — ${r.note}` : ""}` : isVisit ? "Visit marked" : formatRewardText(r.rewardType, r.rewardValue)}
                     </span>
                     <span style={{ font: "var(--type-mono)", color: "var(--text-muted)", fontSize: 11, flex: "0 0 auto" }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}</span>
                   </div>

@@ -348,24 +348,31 @@ export default function CustomerPage({ slug }: { slug: string }) {
       {history.length === 0 ? (
         <EmptyState icon="history" title="No history yet" body="Your visits will appear here." />
       ) : (
-        history.map((r: any, i: number) => (
-          <div key={r._id || i} style={{ display: "flex", gap: 14, alignItems: "center", padding: "12px 14px", background: "var(--paper-000)", border: "var(--border-hair)", borderRadius: "var(--radius-md)" }}>
-            <span style={{ width: 38, height: 38, flex: "0 0 auto", display: "grid", placeItems: "center", background: r.type === "visit" ? "var(--grape-100)" : "var(--sun-100)", border: "var(--border-hair)", borderRadius: "50%" }}>
-              <Icon name={r.type === "visit" ? "stamp" : "gift"} size={18} />
-            </span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ font: "600 15px/1.3 var(--font-body)", color: "var(--text-strong)" }}>
-                {r.type === "visit" ? "Visit marked" : "Reward redeemed"}
-              </div>
-              {r.type !== "visit" && (
-                <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", marginTop: 2 }}>
-                  {formatRewardText(r.rewardType, r.rewardValue)}
+        history.map((r: any, i: number) => {
+          const isVisit = r.type === "visit";
+          const notCounted = isVisit && r.stampAwarded === false;
+          return (
+            <div key={r._id || i} style={{ display: "flex", gap: 14, alignItems: "center", padding: "12px 14px", background: "var(--paper-000)", border: "var(--border-hair)", borderRadius: "var(--radius-md)" }}>
+              <span style={{ width: 38, height: 38, flex: "0 0 auto", display: "grid", placeItems: "center", background: notCounted ? "var(--surface-muted, #eee)" : isVisit ? "var(--grape-100)" : "var(--sun-100)", border: "var(--border-hair)", borderRadius: "50%" }}>
+                <Icon name={notCounted ? "x" : isVisit ? "stamp" : "gift"} size={18} color={notCounted ? "var(--text-muted)" : undefined} />
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: "600 15px/1.3 var(--font-body)", color: notCounted ? "var(--text-muted)" : "var(--text-strong)" }}>
+                  {notCounted ? "Visit not counted" : isVisit ? "Visit marked" : "Reward redeemed"}
                 </div>
-              )}
+                {notCounted && r.note && (
+                  <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", marginTop: 2 }}>{r.note}</div>
+                )}
+                {!isVisit && (
+                  <div style={{ font: "var(--type-body-sm)", color: "var(--text-muted)", marginTop: 2 }}>
+                    {formatRewardText(r.rewardType, r.rewardValue)}
+                  </div>
+                )}
+              </div>
+              <span style={{ font: "var(--type-mono)", color: "var(--text-muted)", flex: "0 0 auto" }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}</span>
             </div>
-            <span style={{ font: "var(--type-mono)", color: "var(--text-muted)", flex: "0 0 auto" }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}</span>
-          </div>
-        ))
+          );
+        })
       )}
     </div>
   );
