@@ -109,6 +109,8 @@ export default function CustomerPage({ slug }: { slug: string }) {
   const nextMs = milestones.find((m: any) => m.count > visits) || milestones[milestones.length - 1] || { count: totalTarget, label: "Reward" };
   const allMilestonesDone = milestones.length > 0 && visits >= milestones[milestones.length - 1].count;
   const unlocked = card?.availableRewards || [];
+  // Full reward history for this card cycle (redeemed + unredeemed), for the Rewards tab.
+  const allRewards = card?.rewards || unlocked;
   const needsBillAmount = biz?.earningMode === "bill_amount" || (biz?.earningMode === "visits_with_min_bill" && biz?.billAmountFieldEnabled);
   const billAmountValid = !needsBillAmount || (billAmount !== "" && billAmount > 0);
 
@@ -323,10 +325,10 @@ export default function CustomerPage({ slug }: { slug: string }) {
   const RewardsTab = (
     <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ font: "var(--type-title)", fontSize: 36, letterSpacing: "var(--tracking-display)", color: "var(--text-strong)" }}>Your rewards</div>
-      {unlocked.length === 0 ? (
+      {allRewards.length === 0 ? (
         <EmptyState icon="gift" title="Nothing unlocked yet" body={`Your first reward lands at ${milestones[0]?.count || 5} visits.`} />
       ) : (
-        unlocked.map((r: any, i: number) => (
+        allRewards.map((r: any, i: number) => (
           <RewardCard
             key={r._id || i}
             title={formatRewardText(r.rewardType, r.rewardValue)}
